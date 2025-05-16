@@ -7,6 +7,7 @@ const util = require('util');
 const TelegramBot = require('node-telegram-bot-api');
 const qrcode = require('qrcode');
 const archiver = require('archiver');
+require('dotenv').config({ path: '/usr/local/etc/xray/adminenv/.env' });
 const execAsync = util.promisify(exec);
 
 // ==========================================
@@ -16,7 +17,7 @@ const CONFIG = {
   CONFIG_PATH: '/usr/local/etc/xray/config.json',
   BACKUP_DIR: '/usr/local/etc/xray/backups/',
   DOMAIN_PATH: '/usr/local/etc/xray/domain',
-  BOT_TOKEN: process.env.BOT_TOKEN || '7658769893:AAHlmyjDGdr8w6p8lKnP_OfeedDoPMAYSfQ',
+  BOT_TOKEN: process.env.BOT_TOKEN,
   ADMINS_FILE: '/usr/local/etc/xray/admin.txt',
   CONFIGS_DIR: '/var/www/html/configs/',
   EXPIRY_FILE: (agentId) => `/usr/local/etc/xray/expiry_data_${agentId}.json.j2`,
