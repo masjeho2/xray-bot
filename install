@@ -53,7 +53,7 @@ sudo apt-get install speedtest
 clear
 ln -fs /usr/share/zoneinfo/Asia/Jakarta /etc/localtime
 apt install haproxy -y
-mkdir -p /etc/haproxy/cert
+mkdir -p /etc/haproxy/certs
 rm /var/www/html/*.html
 rm /etc/nginx/sites-enabled/default
 rm /etc/nginx/sites-available/default
@@ -64,7 +64,7 @@ mkdir -p /var/www/html/shadowsocks
 mkdir -p /var/www/html/shadowsocks2022
 mkdir -p /var/www/html/socks5
 mkdir -p /var/www/html/allxray
-systemctl restart nginx
+systemctl restart haproxy
 clear
 touch /usr/local/etc/xray/domain
 echo -e "${YB}Input Domain${NC} "
