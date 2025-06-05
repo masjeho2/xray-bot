@@ -46,17 +46,39 @@ curl -L -o /usr/local/share/xray/geosite.dat https://github.com/malikshi/v2ray-r
 sleep 1
 cd
 clear
-sudo apt-get install lolcat -y
+apt-get install lolcat -y
 clear
-curl -s https://packagecloud.io/install/repositories/ookla/speedtest-cli/script.deb.sh | sudo bash
-sudo apt-get install speedtest
+
+curl -s https://packagecloud.io/install/repositories/ookla/speedtest-cli/script.deb.sh | bash
+apt-get install speedtest
+
 clear
 ln -fs /usr/share/zoneinfo/Asia/Jakarta /etc/localtime
+
+add-apt-repository ppa:vbernat/haproxy-2.8 -y
+apt update
 apt install haproxy -y
 mkdir -p /etc/haproxy/certs
+clear
+echo -e "${GB}[ INFO ]${NC} ${YB}Setup HAProxy${NC}"
+
+apt-get install gnupg
+curl -fsSL https://pgp.mongodb.com/server-7.0.asc | \
+    gpg -o /usr/share/keyrings/mongodb-server-7.0.gpg \
+   --dearmor
+
+
+echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/ubuntu $(lsb_release -cs)/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+apt-get update
+apt-get install -y mongodb-database-tools
+
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+apt install nodejs -y
+
+
 rm /var/www/html/*.html
-rm /etc/nginx/sites-enabled/default
-rm /etc/nginx/sites-available/default
+rm /etc/haproxy/sites-enabled/default
+rm /etc/haproxy/sites-available/default
 mkdir -p /var/www/html/vmess
 mkdir -p /var/www/html/vless
 mkdir -p /var/www/html/trojan
@@ -77,20 +99,27 @@ echo "$dns" > /usr/local/etc/xray/domain
 echo "DNS=$dns" > /var/lib/dnsvps.conf
 fi
 clear
-systemctl stop nginx
+systemctl stop haproxy
 domain=$(cat /usr/local/etc/xray/domain)
 curl https://get.acme.sh | sh
 source ~/.bashrc
 cd .acme.sh
 bash acme.sh --issue -d $domain --server letsencrypt --keylength ec-256 --fullchain-file /usr/local/etc/xray/fullchain.crt --key-file /usr/local/etc/xray/private.key --standalone --force
+cat /usr/local/etc/xray/fullchain.crt /usr/local/etc/xray/private.key > /etc/haproxy/certs/domain.pem
 clear
-echo -e "${GB}[ INFO ]${NC} ${YB}Setup Nginx & Xray Conf${NC}"
-echo "UQ3w2q98BItd3DPgyctdoJw4cqQFmY59ppiDQdqMKbw=" > /usr/local/etc/xray/serverpsk
-wget -q -O /usr/local/etc/xray/config.json https://raw.githubusercontent.com/masjeho2/conf/main/config.json
-wget -q -O /etc/nginx/nginx.conf https://raw.githubusercontent.com/masjeho2/conf/main/nginx.conf
-wget -q -O /etc/nginx/conf.d/xray.conf https://raw.githubusercontent.com/masjeho2/conf/main/xray.conf
+echo -e "${GB}[ INFO ]${NC} ${YB}Setup haproxy & Xray Conf${NC}"
+
+mkdir -p /usr/local/etc/xray/adminenv
+mkdir -p /usr/local/etc/xray/agentenv
+wget -q -O /usr/local/etc/xray/config.json https://raw.githubusercontent.com/masjeho2/xray-bot/v1/config.json
+wget -q -O /etc/haproxy/haproxy.cfg https://raw.githubusercontent.com/masjeho2/xray-bot/v1/haproxy.cfg
 wget -q -O /var/www/html/robots.txt https://raw.githubusercontent.com/masjeho2/conf/main/robots.txt
-systemctl restart nginx
+wget -q -O /usr/local/etc/xray/package.json https://raw.githubusercontent.com/masjeho2/xray-bot/v1/package.json
+wget -q -O /usr/local/etc/xray/adminenv https://raw.githubusercontent.com/masjeho2/xray-bot/v1/adminenv/.env
+wget -q -O /usr/local/etc/xray/agenenv https://raw.githubusercontent.com/masjeho2/xray-bot/v1/agenenv/.env
+wget -q -O /usr/local/etc/xray/bot-admin https://raw.githubusercontent.com/masjeho2/xray-bot/v1/bot-admin
+wget -q -O /usr/local/etc/xray/bot-agent https://raw.githubusercontent.com/masjeho2/xray-bot/v1/bot-agent
+systemctl restart haproxy
 systemctl restart xray
 echo -e "${GB}[ INFO ]${NC} ${YB}Setup Done${NC}"
 sleep 2
@@ -131,11 +160,7 @@ grep -q '^session\s\+required\s\+pam_limits.so' /etc/pam.d/common-session-nonint
 
 ulimit -n 1000000
 ulimit -u 100000
-mkdir -p /etc/systemd/system/nginx.service.d/
-cat > /etc/systemd/system/nginx.service.d/override.conf << END
-[Service]
-LimitNOFILE=1000000
-END
+echo -e "${GB}[ INFO ]${NC} ${YB}Setup sysctl.conf${NC}"
 
 echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
 echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
@@ -171,157 +196,102 @@ net.core.netdev_max_backlog = 32768
 net.ipv4.tcp_timestamps = 0
 net.ipv4.tcp_max_orphans = 32768
 net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
-
+cat 
 systemctl daemon-reload
-systemctl restart nginx
+systemctl restart haproxy
 
+cat > /etc/systemd/system/bot-admin.service << END
+[Unit]
+Description=bot admin
+After=network.target
+
+[Service]
+ExecStart=/usr/local/etc/xray/bot-admin
+Restart=always
+RestartSec=5
+User=root
+
+[Install]
+WantedBy=multi-user.target
+END
+cat > /etc/systemd/system/bot-agent.service << END
+[Unit]
+Description=bot agent
+After=network.target
+[Service]
+ExecStart=/usr/local/etc/xray/bot-agent
+Restart=always
+RestartSec=5
+User=root
+[Install]
+WantedBy=multi-user.target
+END
 
 cd /usr/bin
 echo -e "${GB}[ INFO ]${NC} ${YB}Downloading Main Menu${NC}"
 wget -q -O /usr/bin/menu "https://raw.githubusercontent.com/masjeho2/v1/xray/menu/menu.sh"
-wget -q -O /usr/bin/vmess "https://raw.githubusercontent.com/masjeho2/v1/xray/menu/vmess.sh"
-wget -q -O /usr/bin/vless "https://raw.githubusercontent.com/masjeho2/v1/xray/menu/vless.sh"
-wget -q -O /usr/bin/trojan "https://raw.githubusercontent.com/masjeho2/v1/xray/menu/trojan.sh"
-wget -q -O /usr/bin/shadowsocks "https://raw.githubusercontent.com/masjeho2/v1/xray/menu/shadowsocks.sh"
-wget -q -O /usr/bin/shadowsocks2022 "https://raw.githubusercontent.com/masjeho2/v1/xray/menu/shadowsocks2022.sh"
-wget -q -O /usr/bin/socks "https://raw.githubusercontent.com/masjeho2/v1/xray/menu/socks.sh"
-wget -q -O /usr/bin/allxray "https://raw.githubusercontent.com/masjeho2/v1/xray/menu/allxray.sh"
-sleep 0.5
-echo -e "${GB}[ INFO ]${NC} ${YB}Downloading Menu Vmess${NC}"
-wget -q -O /usr/bin/add-vmess "https://raw.githubusercontent.com/masjeho2/v1/xray/vmess/add-vmess.sh"
-wget -q -O /usr/bin/del-vmess "https://raw.githubusercontent.com/masjeho2/v1/xray/vmess/del-vmess.sh"
-wget -q -O /usr/bin/extend-vmess "https://raw.githubusercontent.com/masjeho2/v1/xray/vmess/extend-vmess.sh"
-wget -q -O /usr/bin/trialvmess "https://raw.githubusercontent.com/masjeho2/v1/xray/vmess/trialvmess.sh"
-wget -q -O /usr/bin/cek-vmess "https://raw.githubusercontent.com/masjeho2/v1/xray/vmess/cek-vmess.sh" 
-sleep 0.5
-echo -e "${GB}[ INFO ]${NC} ${YB}Downloading Menu Vless${NC}"
-wget -q -O /usr/bin/add-vless "https://raw.githubusercontent.com/masjeho2/v1/xray/vless/add-vless.sh"
-wget -q -O /usr/bin/del-vless "https://raw.githubusercontent.com/masjeho2/v1/xray/vless/del-vless.sh"
-wget -q -O /usr/bin/extend-vless "https://raw.githubusercontent.com/masjeho2/v1/xray/vless/extend-vless.sh"
-wget -q -O /usr/bin/trialvless "https://raw.githubusercontent.com/masjeho2/v1/xray/vless/trialvless.sh"
-wget -q -O /usr/bin/cek-vless "https://raw.githubusercontent.com/masjeho2/v1/xray/vless/cek-vless.sh"
-sleep 0.5
-echo -e "${GB}[ INFO ]${NC} ${YB}Downloading Menu Trojan${NC}"
-wget -q -O /usr/bin/add-trojan "https://raw.githubusercontent.com/masjeho2/v1/xray/trojan/add-trojan.sh"
-wget -q -O /usr/bin/del-trojan "https://raw.githubusercontent.com/masjeho2/v1/xray/trojan/del-trojan.sh"
-wget -q -O /usr/bin/extend-trojan "https://raw.githubusercontent.com/masjeho2/v1/xray/trojan/extend-trojan.sh"
-wget -q -O /usr/bin/trialtrojan "https://raw.githubusercontent.com/masjeho2/v1/xray/trojan/trialtrojan.sh"
-wget -q -O /usr/bin/cek-trojan "https://raw.githubusercontent.com/masjeho2/v1/xray/trojan/cek-trojan.sh"
-sleep 0.5
-echo -e "${GB}[ INFO ]${NC} ${YB}Downloading Menu Shadowsocks${NC}"
-wget -q -O /usr/bin/add-ss "https://github.com/masjeho2/v1/xray/shadowsocks/add-ss.sh"
-wget -q -O /usr/bin/del-ss "https://github.com/masjeho2/v1/xray/shadowsocks/del-ss.sh"
-wget -q -O /usr/bin/extend-ss "https://github.com/masjeho2/v1/xray/shadowsocks/extend-ss.sh"
-wget -q -O /usr/bin/trialss "https://github.com/masjeho2/v1/xray/shadowsocks/trial-ss.sh"
-wget -q -O /usr/bin/cek-ss "https://github.com/masjeho2/v1/xray/shadowsocks/cek-ss.sh"
-sleep 0.5
-echo -e "${GB}[ INFO ]${NC} ${YB}Downloading Menu Shadowsocks 2022${NC}"
-wget -q -O /usr/bin/add-ss2022 "https://raw.githubusercontent.com/masjeho2/v1/xray/shadowsocks2022/add-ss2022.sh"
-wget -q -O /usr/bin/del-ss2022 "https://raw.githubusercontent.com/masjeho2/v1/xray/shadowsocks2022/del-ss2022.sh"
-wget -q -O /usr/bin/extend-ss2022 "https://raw.githubusercontent.com/masjeho2/v1/xray/shadowsocks2022/extend-ss2022.sh"
-wget -q -O /usr/bin/trialss2022 "https://raw.githubusercontent.com/masjeho2/v1/xray/shadowsocks2022/trialss2022.sh"
-wget -q -O /usr/bin/cek-ss2022 "https://raw.githubusercontent.com/masjeho2/v1/xray/shadowsocks2022/cek-ss2022.sh"
-sleep 0.5
-echo -e "${GB}[ INFO ]${NC} ${YB}Downloading Menu Socks5${NC}"
-wget -q -O /usr/bin/add-socks "https://raw.githubusercontent.com/masjeho2/v1/xray/socks/add-socks.sh"
-wget -q -O /usr/bin/del-socks "https://raw.githubusercontent.com/masjeho2/v1/xray/socks/del-socks.sh"
-wget -q -O /usr/bin/extend-socks "https://raw.githubusercontent.com/masjeho2/v1/xray/socks/extend-socks.sh"
-wget -q -O /usr/bin/trialsocks "https://raw.githubusercontent.com/masjeho2/v1/xray/socks/trialsocks.sh"
-wget -q -O /usr/bin/cek-socks "https://raw.githubusercontent.com/masjeho2/v1/xray/socks/cek-socks.sh"
-sleep 0.5
-echo -e "${GB}[ INFO ]${NC} ${YB}Downloading Menu All Xray${NC}"
-wget -q -O /usr/bin/add-xray "https://raw.githubusercontent.com/masjeho2/v1/xray/allxray/add-xray.sh"
-wget -q -O /usr/bin/del-xray "https://raw.githubusercontent.com/masjeho2/v1/xray/allxray/del-xray.sh"
-wget -q -O /usr/bin/extend-xray "https://raw.githubusercontent.com/masjeho2/v1/xray/allxray/extend-xray.sh"
-wget -q -O /usr/bin/trialxray "https://raw.githubusercontent.com/masjeho2/v1/xray/allxray/trialxray.sh"
-wget -q -O /usr/bin/cek-xray "https://raw.githubusercontent.com/masjeho2/v1/xray/allxray/cek-xray.sh"
-sleep 0.5
-echo -e "${GB}[ INFO ]${NC} ${YB}Downloading Menu Log${NC}"
-wget -q -O /usr/bin/log-create "https://raw.githubusercontent.com/masjeho2/v1/xray/log/log-create.sh"
-wget -q -O /usr/bin/log-vmess "https://raw.githubusercontent.com/masjeho2/v1/xray/log/log-vmess.sh"
-wget -q -O /usr/bin/log-vless "https://raw.githubusercontent.com/masjeho2/v1/xray/log/log-vless.sh"
-wget -q -O /usr/bin/log-trojan "https://raw.githubusercontent.com/masjeho2/v1/xray/log/log-trojan.sh"
-wget -q -O /usr/bin/log-ss "https://raw.githubusercontent.com/masjeho2/v1/xray/log/log-ss.sh"
-wget -q -O /usr/bin/log-ss2022 "https://raw.githubusercontent.com/masjeho2/v1/xray/log/log-ss2022.sh"
-wget -q -O /usr/bin/log-socks "https://raw.githubusercontent.com/masjeho2/v1/xray/log/log-socks.sh"
-wget -q -O /usr/bin/log-allxray "https://raw.githubusercontent.com/masjeho2/v1/xray/log/log-allxray.sh"
+
+
 sleep 0.5
 echo -e "${GB}[ INFO ]${NC} ${YB}Downloading Other Menu${NC}"
-wget -q -O /usr/bin/xp "https://raw.githubusercontent.com/masjeho2/v1/xray/other/xp.sh"
+
 wget -q -O /usr/bin/dns "https://raw.githubusercontent.com/masjeho2/v1/xray/other/dns.sh"
 wget -q -O /usr/bin/certxray "https://raw.githubusercontent.com/masjeho2/v1/xray/other/certxray.sh"
 wget -q -O /usr/bin/xraymod "https://raw.githubusercontent.com/masjeho2/v1/xray/other/xraymod.sh"
 wget -q -O /usr/bin/xrayofficial "https://raw.githubusercontent.com/masjeho2/v1/xray/other/xrayofficial.sh"
 wget -q -O /usr/bin/about "https://raw.githubusercontent.com/masjeho2/v1/xray/other/about.sh"
 wget -q -O /usr/bin/clear-log "https://raw.githubusercontent.com/masjeho2/v1/xray/other/clear-log.sh"
-wget -q -O /usr/bin/info-cpu "https://raw.githubusercontent.com/masjeho2/v1/xray/other/info-cpu.sh"
+
 echo -e "${GB}[ INFO ]${NC} ${YB}Download All Menu Done${NC}"
 sleep 2
-chmod +x /usr/bin/add-vmess
-chmod +x /usr/bin/del-vmess
-chmod +x /usr/bin/extend-vmess
-chmod +x /usr/bin/trialvmess
-chmod +x /usr/bin/cek-vmess
-chmod +x /usr/bin/add-vless
-chmod +x /usr/bin/del-vless
-chmod +x /usr/bin/extend-vless
-chmod +x /usr/bin/trialvless
-chmod +x /usr/bin/cek-vless
-chmod +x /usr/bin/add-trojan
-chmod +x /usr/bin/del-trojan
-chmod +x /usr/bin/extend-trojan
-chmod +x /usr/bin/trialtrojan
-chmod +x /usr/bin/cek-trojan
-chmod +x /usr/bin/add-ss
-chmod +x /usr/bin/del-ss
-chmod +x /usr/bin/extend-ss
-chmod +x /usr/bin/trialss
-chmod +x /usr/bin/cek-ss
-chmod +x /usr/bin/add-ss2022
-chmod +x /usr/bin/del-ss2022
-chmod +x /usr/bin/extend-ss2022
-chmod +x /usr/bin/trialss2022
-chmod +x /usr/bin/cek-ss2022
-chmod +x /usr/bin/add-socks
-chmod +x /usr/bin/del-socks
-chmod +x /usr/bin/extend-socks
-chmod +x /usr/bin/trialsocks
-chmod +x /usr/bin/cek-socks
-chmod +x /usr/bin/add-xray
-chmod +x /usr/bin/del-xray
-chmod +x /usr/bin/extend-xray
-chmod +x /usr/bin/trialxray
-chmod +x /usr/bin/cek-xray
-chmod +x /usr/bin/log-create
-chmod +x /usr/bin/log-vmess
-chmod +x /usr/bin/log-vless
-chmod +x /usr/bin/log-trojan
-chmod +x /usr/bin/log-ss
-chmod +x /usr/bin/log-ss2022
-chmod +x /usr/bin/log-socks
-chmod +x /usr/bin/log-allxray
-chmod +x /usr/bin/menu
-chmod +x /usr/bin/vmess
-chmod +x /usr/bin/vless
-chmod +x /usr/bin/trojan
-chmod +x /usr/bin/shadowsocks
-chmod +x /usr/bin/shadowsocks2022
-chmod +x /usr/bin/socks
-chmod +x /usr/bin/allxray
-chmod +x /usr/bin/xp
+
+
+
+
+
+
+
+
+
+clearecho -e "${GB}[ INFO ]${NC} ${YB}Setting Permission${NC}"
+chmod +x /usr/local/etc/xray/bot-admin
+chmod +x /usr/local/etc/xray/bot-agent
 chmod +x /usr/bin/dns
 chmod +x /usr/bin/certxray
 chmod +x /usr/bin/xraymod
 chmod +x /usr/bin/xrayofficial
 chmod +x /usr/bin/about
 chmod +x /usr/bin/clear-log
-chmod +x /usr/bin/info-cpu
+chmod +x /usr/bin/menu
 cd
-echo "0 0 * * * root xp" >> /etc/crontab
+
 echo "*/5 * * * * root clear-log" >> /etc/crontab
-echo "*/5 * * * * root info-cpu" >> /etc/crontab
+
 echo "0 0 */7 * * root curl -L -o /usr/local/share/xray/geoip.dat https://github.com/malikshi/v2ray-rules-dat/releases/latest/download/geoip.dat && curl -L -o /usr/local/share/xray/geosite.dat https://github.com/malikshi/v2ray-rules-dat/releases/latest/download/geosite.dat && systemctl restart xray" >> /etc/crontab
 systemctl restart cron
+systemctl enable bot-admin
+systemctl enable bot-agent
+systemctl enable haproxy
+systemctl enable xray
+systemctl start bot-admin
+systemctl start bot-agent
+systemctl start haproxy
+systemctl start xray
+systemctl restart haproxy
+systemctl restart xray
+systemctl restart bot-admin
+systemctl restart bot-agent
+clear
+
+
+echo -e "${GB}[ INFO ]${NC} ${YB}Setting Permission Done${NC}"
+sleep 2
+cd /usr/local/etc/xray
+npm install
+npm install -g pm2
+cd
+
+echo -e "${GB}[ INFO ]${NC} ${YB}Setting Profile${NC}"
 cat > /root/.profile << END
 if [ "$BASH" ]; then
 if [ -f ~/.bashrc ]; then
@@ -351,17 +321,14 @@ echo -e "━━━━━━━━━━━━━━━━━━━━━━━�
 echo -e "  ${YB}- Vless${NC}                   ${WB}|${NC}  ${YB}- Websocket (CDN) non TLS${NC}"
 echo -e "  ${YB}- Vmess${NC}                   ${WB}|${NC}  ${YB}- Websocket (CDN) TLS${NC}"
 echo -e "  ${YB}- Trojan${NC}                  ${WB}|${NC}  ${YB}- gRPC (CDN) TLS${NC}"
-echo -e "  ${YB}- Socks5${NC}                  ${WB}|${NC}"
-echo -e "  ${YB}- Shadowsocks${NC}             ${WB}|${NC}"
-echo -e "  ${YB}- Shadowsocks 2022${NC}        ${WB}|${NC}"
 echo -e "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" | lolcat -a -d 10 
 echo -e "               ${WB}»»» Network Port Service «««${NC}             "
 echo -e "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" | lolcat -a -d 10 
-echo -e "  ${YB}- HTTPS : 443, 2053, 2083, 2087, 2096, 8443${NC}"
-echo -e "  ${YB}- HTTP  : 80, 8080, 8880, 2052, 2082, 2086, 2095${NC}"
+echo -e "  ${YB}- HTTPS : 443 ${NC}"
+echo -e "  ${YB}- HTTP  : 80 ${NC}"
 echo -e "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" | lolcat -a -d 10 
 echo ""
-rm -f xray
+rm -f install
 secs_to_human "$(($(date +%s) - ${start}))"
 echo -e "${YB}[ WARNING ] reboot now ? (Y/N)${NC} "
 read answer

@@ -142,7 +142,7 @@
     {
       "protocol": "freedom",
       "settings": {},
-      "tag": "direct"
+      "tag": "api"
     },
     {
       "protocol": "blackhole",
@@ -175,7 +175,7 @@
       },
       {
         "type": "field",
-        "outboundTag": "direct",
+        "outboundTag": "api",
         "domain": [
           "domain:pagead2.googlesyndication.com"
         ]
