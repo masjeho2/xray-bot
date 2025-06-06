@@ -273,14 +273,14 @@ systemctl enable bot-admin
 systemctl enable bot-agent
 systemctl enable haproxy
 systemctl enable xray
-systemctl start bot-admin
-systemctl start bot-agent
+#systemctl start bot-admin
+#systemctl start bot-agent
 systemctl start haproxy
 systemctl start xray
 systemctl restart haproxy
 systemctl restart xray
-systemctl restart bot-admin
-systemctl restart bot-agent
+#systemctl restart bot-admin
+#systemctl restart bot-agent
 clear
 
 
