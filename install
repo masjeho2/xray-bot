@@ -64,8 +64,8 @@ clear
 
 apt-get install gnupg
 #curl -fsSL https://pgp.mongodb.com/server-7.0.asc | \
-    gpg -o /usr/share/keyrings/mongodb-server-7.0.gpg \
-   --dearmor
+#    gpg -o /usr/share/keyrings/mongodb-server-7.0.gpg \
+#   --dearmor
 
 
 #echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/ubuntu $(lsb_release -cs)/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
@@ -196,7 +196,7 @@ net.core.netdev_max_backlog = 32768
 net.ipv4.tcp_timestamps = 0
 net.ipv4.tcp_max_orphans = 32768
 net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
-cat 
+
 
 #systemctl restart haproxy
 
