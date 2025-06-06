@@ -197,8 +197,8 @@ net.ipv4.tcp_timestamps = 0
 net.ipv4.tcp_max_orphans = 32768
 net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
 cat 
-systemctl daemon-reload
-systemctl restart haproxy
+
+#systemctl restart haproxy
 
 cat > /etc/systemd/system/bot-admin.service << END
 [Unit]
@@ -268,6 +268,7 @@ cd
 echo "*/5 * * * * root clear-log" >> /etc/crontab
 
 echo "0 0 */7 * * root curl -L -o /usr/local/share/xray/geoip.dat https://github.com/malikshi/v2ray-rules-dat/releases/latest/download/geoip.dat && curl -L -o /usr/local/share/xray/geosite.dat https://github.com/malikshi/v2ray-rules-dat/releases/latest/download/geosite.dat && systemctl restart xray" >> /etc/crontab
+systemctl daemon-reload
 systemctl restart cron
 systemctl enable bot-admin
 systemctl enable bot-agent
