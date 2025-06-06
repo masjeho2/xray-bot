@@ -36,10 +36,10 @@ curl -s ipinfo.io/city >> /usr/local/etc/xray/city
 curl -s ipinfo.io/org | cut -d " " -f 2-10 >> /usr/local/etc/xray/org
 curl -s ipinfo.io/timezone >> /usr/local/etc/xray/timezone
 clear
-echo -e "${GB}[ INFO ]${NC} ${YB}Downloading Xray-core mod${NC}"
+
 sleep 0.5
 wget -q -O /backup/xray.mod.backup "https://github.com/dharak36/Xray-core/releases/download/v1.0.0/xray.linux.64bit"
-echo -e "${GB}[ INFO ]${NC} ${YB}Download Xray-core done${NC}"
+
 sleep 1
 curl -L -o /usr/local/share/xray/geoip.dat https://github.com/malikshi/v2ray-rules-dat/releases/latest/download/geoip.dat
 curl -L -o /usr/local/share/xray/geosite.dat https://github.com/malikshi/v2ray-rules-dat/releases/latest/download/geosite.dat
@@ -49,8 +49,8 @@ clear
 apt-get install lolcat -y
 clear
 
-curl -s https://packagecloud.io/install/repositories/ookla/speedtest-cli/script.deb.sh | bash
-apt-get install speedtest
+#curl -s https://packagecloud.io/install/repositories/ookla/speedtest-cli/script.deb.sh | bash
+#apt-get install speedtest
 
 clear
 ln -fs /usr/share/zoneinfo/Asia/Jakarta /etc/localtime
@@ -60,17 +60,17 @@ apt update
 apt install haproxy -y
 mkdir -p /etc/haproxy/certs
 clear
-echo -e "${GB}[ INFO ]${NC} ${YB}Setup HAProxy${NC}"
+
 
 apt-get install gnupg
-curl -fsSL https://pgp.mongodb.com/server-7.0.asc | \
+#curl -fsSL https://pgp.mongodb.com/server-7.0.asc | \
     gpg -o /usr/share/keyrings/mongodb-server-7.0.gpg \
    --dearmor
 
 
-echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/ubuntu $(lsb_release -cs)/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
-apt-get update
-apt-get install -y mongodb-database-tools
+#echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/ubuntu $(lsb_release -cs)/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+#apt-get update
+#apt-get install -y mongodb-database-tools
 
 curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
 apt install nodejs -y
@@ -86,7 +86,7 @@ mkdir -p /var/www/html/shadowsocks
 mkdir -p /var/www/html/shadowsocks2022
 mkdir -p /var/www/html/socks5
 mkdir -p /var/www/html/allxray
-systemctl restart haproxy
+#systemctl restart haproxy
 clear
 touch /usr/local/etc/xray/domain
 echo -e "${YB}Input Domain${NC} "
@@ -119,7 +119,7 @@ wget -q -O /usr/local/etc/xray/adminenv https://raw.githubusercontent.com/masjeh
 wget -q -O /usr/local/etc/xray/agenenv https://raw.githubusercontent.com/masjeho2/xray-bot/v1/agenenv/.env
 wget -q -O /usr/local/etc/xray/bot-admin https://raw.githubusercontent.com/masjeho2/xray-bot/v1/bot-admin
 wget -q -O /usr/local/etc/xray/bot-agent https://raw.githubusercontent.com/masjeho2/xray-bot/v1/bot-agent
-systemctl restart haproxy
+#systemctl restart haproxy
 systemctl restart xray
 echo -e "${GB}[ INFO ]${NC} ${YB}Setup Done${NC}"
 sleep 2
@@ -160,7 +160,7 @@ grep -q '^session\s\+required\s\+pam_limits.so' /etc/pam.d/common-session-nonint
 
 ulimit -n 1000000
 ulimit -u 100000
-echo -e "${GB}[ INFO ]${NC} ${YB}Setup sysctl.conf${NC}"
+
 
 echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
 echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
