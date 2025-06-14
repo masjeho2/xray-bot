@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infografis: Skrip Instalasi Server Otomatis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+        }
+        .gradient-text {
+            background: linear-gradient(to right, #006EE6, #004AAD);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 450px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .flow-line {
+            width: 2px;
+            background-color: #80BFFF;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .flow-step {
+            border-color: #006EE6;
+        }
+        .code-block {
+            background-color: #1e293b;
+            color: #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            position: relative;
+        }
+        .copy-button {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background-color: #334155;
+            color: #94a3b8;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: background-color 0.2s;
+        }
+        .copy-button:hover {
+            background-color: #475569;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-5xl">
+        
+        <header class="text-center my-12">
+            <h1 class="text-4xl md:text-6xl font-black gradient-text">Skrip Instalasi Server Otomatis</h1>
+            <p class="mt-4 text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">Sebuah solusi lengkap untuk menerapkan server proxy premium dengan Xray, HAProxy, dan Bot Manajemen hanya dalam hitungan menit.</p>
+        </header>
+
+        <main>
+            <section id="features" class="my-16">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-gray-900">Arsitektur & Fitur Utama</h2>
+                    <p class="mt-2 text-md text-gray-500">Dibangun di atas tumpukan teknologi yang andal untuk performa dan kemudahan pengelolaan.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h3 class="text-xl font-bold text-center mb-4 text-[#004AAD]">Komposisi Tumpukan Teknologi</h3>
+                        <div class="chart-container">
+                            <canvas id="techStackChart"></canvas>
+                        </div>
+                        <p class="text-sm text-gray-600 mt-4 text-center">Visualisasi ini menunjukkan bagaimana komponen inti saling melengkapi. Xray-core menjadi mesin utama, HAProxy sebagai gerbang TLS yang kuat, dan Bot sebagai antarmuka manajemen yang ramah pengguna.</p>
+                    </div>
+                    <div class="space-y-6">
+                        <div class="p-6 bg-white rounded-lg shadow-lg flex items-start space-x-4">
+                            <span class="text-3xl">⚙️</span>
+                            <div>
+                                <h4 class="font-bold text-lg text-[#004AAD]">Multi-Protokol Xray</h4>
+                                <p class="text-gray-600">Mendukung VLESS, VMess, dan Trojan dengan transpor WebSocket & gRPC untuk fleksibilitas maksimum.</p>
+                            </div>
+                        </div>
+                        <div class="p-6 bg-white rounded-lg shadow-lg flex items-start space-x-4">
+                            <span class="text-3xl">🛡️</span>
+                            <div>
+                                <h4 class="font-bold text-lg text-[#004AAD]">Keamanan & Performa</h4>
+                                <p class="text-gray-600">Dilengkapi Fail2Ban, aturan firewall anti-torrent, dan tuning kernel (BBR) untuk server yang cepat dan aman.</p>
+                            </div>
+                        </div>
+                        <div class="p-6 bg-white rounded-lg shadow-lg flex items-start space-x-4">
+                            <span class="text-3xl">🤖</span>
+                            <div>
+                                <h4 class="font-bold text-lg text-[#004AAD]">Bot Manajemen</h4>
+                                <p class="text-gray-600">Kelola pengguna dengan mudah melalui Bot Telegram tanpa perlu akses SSH berulang kali.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="performance" class="my-16">
+                 <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-gray-900">Dirancang untuk Kinerja Tinggi</h2>
+                    <p class="mt-2 text-md text-gray-500">Setiap aspek dioptimalkan untuk menangani koneksi dalam jumlah besar dengan latensi rendah.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                    <div class="bg-white rounded-lg shadow-lg p-8">
+                        <p class="text-6xl font-extrabold gradient-text">1M</p>
+                        <h4 class="mt-2 text-xl font-bold text-[#004AAD]">Batas File Descriptor</h4>
+                        <p class="mt-2 text-gray-600">Batas `ulimit` dinaikkan hingga 1.000.000 untuk menangani ribuan koneksi simultan tanpa kendala.</p>
+                    </div>
+                     <div class="bg-white rounded-lg shadow-lg p-8">
+                        <p class="text-6xl font-extrabold gradient-text">BBR</p>
+                        <h4 class="mt-2 text-xl font-bold text-[#004AAD]">Kontrol Kongesti TCP</h4>
+                        <p class="mt-2 text-gray-600">Mengaktifkan Google BBR, algoritma canggih yang secara signifikan mengurangi latensi dan meningkatkan throughput jaringan.</p>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-lg p-8">
+                        <p class="text-6xl font-extrabold gradient-text">SSL</p>
+                        <h4 class="mt-2 text-xl font-bold text-[#004AAD]">Terminasi TLS Efisien</h4>
+                        <p class="mt-2 text-gray-600">HAProxy menangani enkripsi SSL/TLS, membebaskan Xray agar dapat fokus pada pemrosesan inti dengan performa maksimal.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="requirements" class="my-16">
+                 <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-gray-900">Persyaratan Sistem</h2>
+                    <p class="mt-2 text-md text-gray-500">Pastikan server Anda memenuhi kriteria berikut untuk instalasi yang lancar.</p>
+                </div>
+                <div class="bg-white rounded-lg shadow-lg p-8">
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-8 text-center">
+                        <div class="flex flex-col items-center">
+                            <span class="text-5xl mb-2">🖥️</span>
+                            <h4 class="font-semibold">Server VPS</h4>
+                            <p class="text-sm text-gray-500">Instalasi baru (bersih)</p>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <span class="text-5xl mb-2">🐧</span>
+                            <h4 class="font-semibold">Sistem Operasi</h4>
+                            <p class="text-sm text-gray-500">Ubuntu 20.04+ atau Debian 10+</p>
+                        </div>
+                        <div class="flex flex-col items-center">
+                             <span class="text-5xl mb-2">⚙️</span>
+                            <h4 class="font-semibold">CPU & RAM</h4>
+                            <p class="text-sm text-gray-500">Min. 1 Core & 1GB RAM</p>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <span class="text-5xl mb-2">🌐</span>
+                            <h4 class="font-semibold">Domain</h4>
+                            <p class="text-sm text-gray-500">A Record menunjuk ke IP VPS</p>
+                        </div>
+                         <div class="flex flex-col items-center">
+                            <span class="text-5xl mb-2">🔑</span>
+                            <h4 class="font-semibold">Akses Root</h4>
+                            <p class="text-sm text-gray-500">Login sebagai pengguna `root`</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="installation" class="my-16">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-gray-900">Proses Instalasi 5 Langkah</h2>
+                    <p class="mt-2 text-md text-gray-500">Ikuti alur sederhana ini untuk membuat server Anda aktif dan berjalan.</p>
+                </div>
+                <div class="relative px-4">
+                    <div class="absolute h-full w-0.5 bg-blue-200 left-1/2 -translate-x-1/2"></div>
+                    <div class="relative mb-8 flex justify-center items-center">
+                        <div class="hidden md:block w-5/12"></div>
+                        <div class="hidden md:block mx-4 z-10"><div class="bg-[#006EE6] text-white rounded-full h-8 w-8 flex items-center justify-center font-bold">1</div></div>
+                        <div class="w-full md:w-5/12 bg-white p-6 rounded-lg shadow-lg border-l-4 flow-step">
+                            <p class="md:hidden text-lg font-bold text-[#006EE6] mb-2">Langkah 1</p>
+                            <h4 class="font-bold text-lg">Jalankan Perintah Instalasi</h4>
+                            <p class="text-gray-600">Login sebagai root dan eksekusi perintah instalasi tunggal.</p>
+                        </div>
+                    </div>
+                    <div class="relative mb-8 flex justify-center items-center">
+                        <div class="w-full md:w-5/12 bg-white p-6 rounded-lg shadow-lg border-r-4 md:border-r-0 md:border-l-4 flow-step md:text-right">
+                             <p class="md:hidden text-lg font-bold text-[#006EE6] mb-2">Langkah 2</p>
+                            <h4 class="font-bold text-lg">Masukkan Domain Anda</h4>
+                            <p class="text-gray-600">Saat diminta, ketik nama domain yang sudah diarahkan ke IP server.</p>
+                        </div>
+                        <div class="hidden md:block mx-4 z-10"><div class="bg-[#006EE6] text-white rounded-full h-8 w-8 flex items-center justify-center font-bold">2</div></div>
+                        <div class="hidden md:block w-5/12"></div>
+                    </div>
+                    <div class="relative mb-8 flex justify-center items-center">
+                         <div class="hidden md:block w-5/12"></div>
+                        <div class="hidden md:block mx-4 z-10"><div class="bg-[#006EE6] text-white rounded-full h-8 w-8 flex items-center justify-center font-bold">3</div></div>
+                        <div class="w-full md:w-5/12 bg-white p-6 rounded-lg shadow-lg border-l-4 flow-step">
+                             <p class="md:hidden text-lg font-bold text-[#006EE6] mb-2">Langkah 3</p>
+                            <h4 class="font-bold text-lg">Tunggu Proses Selesai</h4>
+                            <p class="text-gray-600">Skrip akan mengurus sisanya, dari instalasi hingga konfigurasi SSL.</p>
+                        </div>
+                    </div>
+                     <div class="relative mb-8 flex justify-center items-center">
+                        <div class="w-full md:w-5/12 bg-white p-6 rounded-lg shadow-lg border-r-4 md:border-r-0 md:border-l-4 flow-step md:text-right">
+                             <p class="md:hidden text-lg font-bold text-[#006EE6] mb-2">Langkah 4</p>
+                            <h4 class="font-bold text-lg">Reboot Server</h4>
+                            <p class="text-gray-600">Setujui untuk me-reboot server agar semua perubahan sistem diterapkan.</p>
+                        </div>
+                        <div class="hidden md:block mx-4 z-10"><div class="bg-[#006EE6] text-white rounded-full h-8 w-8 flex items-center justify-center font-bold">4</div></div>
+                        <div class="hidden md:block w-5/12"></div>
+                    </div>
+                    <div class="relative mb-8 flex justify-center items-center">
+                         <div class="hidden md:block w-5/12"></div>
+                        <div class="hidden md:block mx-4 z-10"><div class="bg-[#006EE6] text-white rounded-full h-8 w-8 flex items-center justify-center font-bold">5</div></div>
+                        <div class="w-full md:w-5/12 bg-white p-6 rounded-lg shadow-lg border-l-4 flow-step">
+                             <p class="md:hidden text-lg font-bold text-[#006EE6] mb-2">Langkah 5</p>
+                            <h4 class="font-bold text-lg">Akses Panel Menu</h4>
+                            <p class="text-gray-600">Setelah login kembali, ketik `menu` untuk mulai mengelola server Anda.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+             <section id="cta" class="my-16 text-center">
+                <h2 class="text-3xl font-bold text-gray-900">Siap Memulai?</h2>
+                <p class="mt-2 text-md text-gray-500 max-w-2xl mx-auto">Salin perintah di bawah ini dan jalankan di terminal server Anda sebagai pengguna `root` untuk memulai instalasi.</p>
+                <div class="mt-8 max-w-3xl mx-auto">
+                    <div class="code-block text-left">
+                        <pre id="install-command" class="whitespace-pre-wrap break-all"><code>bash -c "$(curl -sL https://raw.githubusercontent.com/masjeho2/xray-bot/refs/heads/v1/install)"</code></pre>
+                        <button onclick="copyCommand()" class="copy-button">Salin</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <footer class="text-center mt-16 py-8 border-t border-gray-200">
+            <p class="text-gray-500">&copy; 2024 Skrip Instalasi Otomatis. Infografis dibuat dengan 💙.</p>
+        </footer>
+    </div>
+
+<script>
+    function processLabels(labels, maxLength) {
+        return labels.map(label => {
+            if (label.length <= maxLength) {
+                return label;
+            }
+            const words = label.split(' ');
+            const lines = [];
+            let currentLine = '';
+            for (const word of words) {
+                if ((currentLine + ' ' + word).trim().length > maxLength) {
+                    lines.push(currentLine.trim());
+                    currentLine = word;
+                } else {
+                    currentLine = (currentLine + ' ' + word).trim();
+                }
+            }
+            if (currentLine) {
+                lines.push(currentLine.trim());
+            }
+            return lines;
+        });
+    }
+
+    const defaultTooltipCallback = {
+        plugins: {
+            tooltip: {
+                callbacks: {
+                    title: function(tooltipItems) {
+                        const item = tooltipItems[0];
+                        let label = item.chart.data.labels[item.dataIndex];
+                        if (Array.isArray(label)) {
+                          return label.join(' ');
+                        } else {
+                          return label;
+                        }
+                    }
+                }
+            }
+        }
+    };
+    
+    const colors = {
+        darkBlue: '#004AAD',
+        brightBlue: '#006EE6',
+        lightBlue: '#80BFFF',
+        veryLightBlue: '#B3D9FF',
+        gray: '#cbd5e1'
+    };
+
+    const techStackCtx = document.getElementById('techStackChart');
+    if (techStackCtx) {
+        new Chart(techStackCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Xray-Core (Mesin Utama)', 'HAProxy (Reverse Proxy & TLS)', 'Bot Manajemen (Antarmuka)'],
+                datasets: [{
+                    label: 'Komposisi Teknologi',
+                    data: [50, 30, 20],
+                    backgroundColor: [
+                        colors.brightBlue,
+                        colors.darkBlue,
+                        colors.lightBlue
+                    ],
+                    borderColor: '#f0f4f8',
+                    borderWidth: 4,
+                    hoverOffset: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    ...defaultTooltipCallback.plugins,
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#333',
+                            font: {
+                                size: 12
+                            },
+                            padding: 20
+                        }
+                    }
+                },
+                cutout: '65%'
+            }
+        });
+    }
+
+    function copyCommand() {
+        const commandText = document.getElementById('install-command').innerText;
+        const tempTextArea = document.createElement('textarea');
+        tempTextArea.value = commandText;
+        document.body.appendChild(tempTextArea);
+        tempTextArea.select();
+        try {
+            document.execCommand('copy');
+            alert('Perintah berhasil disalin!');
+        } catch (err) {
+            alert('Gagal menyalin perintah.');
+        }
+        document.body.removeChild(tempTextArea);
+    }
+</script>
+
+</body>
+</html>
