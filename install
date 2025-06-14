@@ -1,186 +1,225 @@
-rm -rf install
-clear
+#!/bin/bash
+
+# =================================================================
+# Skrip Instalasi Server Xray, HAProxy, dan Bot
+#
+# Deskripsi:
+# Skrip ini mengotomatiskan penyiapan server proxy dengan Xray,
+# menggunakan HAProxy sebagai reverse proxy, dan menyertakan
+# bot Telegram untuk manajemen.
+#
+# Versi: 1.1 (Refactored)
+# =================================================================
+
+# Hentikan eksekusi jika terjadi kesalahan
+set -e
+
+# --- [BAGIAN 1: PENGATURAN AWAL & VARIABEL] ---
+
+# Variabel Warna untuk output
 NC='\e[0m'
 DEFBOLD='\e[39;1m'
 RB='\e[31;1m'
 GB='\e[32;1m'
 YB='\e[33;1m'
 BB='\e[34;1m'
-MB='\e[35;1m'
-CB='\e[35;1m'
 WB='\e[37;1m'
-secs_to_human() {
-echo -e "${WB}Installation time : $(( ${1} / 3600 )) hours $(( (${1} / 60) % 60 )) minute's $(( ${1} % 60 )) seconds${NC}"
+
+# Variabel Konfigurasi
+GITHUB_REPO="raw.githubusercontent.com/masjeho2"
+XRAY_BOT_REPO_V1="${GITHUB_REPO}/xray-bot/v1"
+CONF_REPO="${GITHUB_REPO}/conf/main"
+MENU_REPO="${GITHUB_REPO}/v1/xray"
+
+# Catat waktu mulai
+start_time=$(date +%s)
+
+# Fungsi untuk menampilkan pesan dengan format
+log_message() {
+    local type="$1"
+    local message="$2"
+    case "$type" in
+        "INFO") color="$GB" ;;
+        "WARN") color="$YB" ;;
+        "ERROR") color="$RB" ;;
+        *) color="$NC" ;;
+    esac
+    echo -e "${color}[ ${type} ]${NC} ${WB}${message}${NC}"
 }
-start=$(date +%s)
-GIHUB_REPO=raw.githubusercontent.com/masjeho2/conf
-apt update -y
-apt full-upgrade -y
-apt dist-upgrade -y
-apt install socat curl screen cron screenfetch netfilter-persistent vnstat lsof fail2ban -y
-apt install sysstat -y
-apt install jq -y
 
-mkdir /backup > /dev/null 2>&1
-mkdir /user > /dev/null 2>&1
-mkdir /tmp > /dev/null 2>&1
-clear
-vnstat --remove -i eth1 --force
-clear
-rm /usr/local/etc/xray/city > /dev/null 2>&1
-rm /usr/local/etc/xray/org > /dev/null 2>&1
-rm /usr/local/etc/xray/timezone > /dev/null 2>&1
-bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" - install --beta
-cp /usr/local/bin/xray /backup/xray.official.backup
-curl -s ipinfo.io/city >> /usr/local/etc/xray/city
-curl -s ipinfo.io/org | cut -d " " -f 2-10 >> /usr/local/etc/xray/org
-curl -s ipinfo.io/timezone >> /usr/local/etc/xray/timezone
-clear
+# Fungsi untuk menghitung dan menampilkan durasi instalasi
+secs_to_human() {
+    local total_secs=$1
+    local hours=$((total_secs / 3600))
+    local minutes=$(((total_secs / 60) % 60))
+    local seconds=$((total_secs % 60))
+    log_message "INFO" "Total waktu instalasi: ${hours} jam, ${minutes} menit, ${seconds} detik."
+}
 
-sleep 0.5
-wget -q -O /backup/xray.mod.backup "https://github.com/dharak36/Xray-core/releases/download/v1.0.0/xray.linux.64bit"
+# --- [BAGIAN 2: FUNGSI-FUNGSI INSTALASI] ---
 
-sleep 1
-curl -L -o /usr/local/share/xray/geoip.dat https://github.com/malikshi/v2ray-rules-dat/releases/latest/download/geoip.dat
-curl -L -o /usr/local/share/xray/geosite.dat https://github.com/malikshi/v2ray-rules-dat/releases/latest/download/geosite.dat
-sleep 1
-cd
-clear
-apt-get install lolcat -y
-clear
+# Fungsi untuk memperbarui sistem dan paket
+update_system() {
+    log_message "INFO" "Memulai pembaruan sistem..."
+    apt-get update -y
+    apt-get full-upgrade -y
+    apt-get dist-upgrade -y
+    apt-get autoremove -y
+    log_message "INFO" "Pembaruan sistem selesai."
+}
 
-#curl -s https://packagecloud.io/install/repositories/ookla/speedtest-cli/script.deb.sh | bash
-#apt-get install speedtest
+# Fungsi untuk menginstal dependensi yang dibutuhkan
+install_dependencies() {
+    log_message "INFO" "Menginstal dependensi yang diperlukan..."
+    apt-get install -y socat curl screen cron screenfetch netfilter-persistent vnstat lsof fail2ban sysstat jq gnupg software-properties-common lolcat
+    log_message "INFO" "Instalasi dependensi selesai."
+}
 
-clear
-ln -fs /usr/share/zoneinfo/Asia/Jakarta /etc/localtime
+# Fungsi untuk membuat direktori yang diperlukan
+setup_directories() {
+    log_message "INFO" "Membuat direktori yang diperlukan..."
+    mkdir -p /backup /user /var/www/html/{vmess,vless,trojan,shadowsocks,shadowsocks2022,socks5,allxray} /usr/local/etc/xray/{adminenv,agenenv} /etc/haproxy/certs
+}
 
-add-apt-repository ppa:vbernat/haproxy-2.8 -y
-apt update
-apt install haproxy -y
-mkdir -p /etc/haproxy/certs
-clear
+# Fungsi untuk instalasi dan konfigurasi Xray
+setup_xray() {
+    log_message "INFO" "Memulai instalasi dan konfigurasi Xray..."
 
+    # Instal Xray Core
+    bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" - install --beta
+    
+    # Backup Xray binary asli
+    cp /usr/local/bin/xray /backup/xray.official.backup
+    
+    # Ambil informasi Geo
+    curl -s ipinfo.io/city > /usr/local/etc/xray/city
+    curl -s ipinfo.io/org | cut -d " " -f 2-10 > /usr/local/etc/xray/org
+    curl -s ipinfo.io/timezone > /usr/local/etc/xray/timezone
+    
+    # Download GeoIP & GeoSite data
+    log_message "INFO" "Mengunduh file GeoIP dan GeoSite..."
+    curl -L -o /usr/local/share/xray/geoip.dat https://github.com/malikshi/v2ray-rules-dat/releases/latest/download/geoip.dat
+    curl -L -o /usr/local/share/xray/geosite.dat https://github.com/malikshi/v2ray-rules-dat/releases/latest/download/geosite.dat
+    
+    log_message "INFO" "Instalasi Xray selesai."
+}
 
-apt-get install gnupg
-curl -fsSL https://pgp.mongodb.com/server-7.0.asc | \
-    gpg -o /usr/share/keyrings/mongodb-server-7.0.gpg \
-   --dearmor
+# Fungsi untuk instalasi software server lainnya (HAProxy, MongoDB, Node.js)
+install_server_software() {
+    log_message "INFO" "Menginstal HAProxy, MongoDB Tools, dan Node.js..."
 
+    # Setup Timezone
+    ln -fs /usr/share/zoneinfo/Asia/Jakarta /etc/localtime
 
-echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/ubuntu $(lsb_release -cs)/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
-apt-get update
-apt-get install -y mongodb-database-tools
+    # Instal HAProxy
+    add-apt-repository ppa:vbernat/haproxy-2.8 -y
+    apt-get update
+    apt-get install -y haproxy
 
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-apt install nodejs -y
+    # Instal MongoDB Database Tools
+    curl -fsSL https://pgp.mongodb.com/server-7.0.asc | gpg --dearmor -o /usr/share/keyrings/mongodb-server-7.0.gpg
+    echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/ubuntu $(lsb_release -cs)/mongodb-org/7.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+    apt-get update
+    apt-get install -y mongodb-database-tools
 
+    # Instal Node.js
+    curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+    apt-get install -y nodejs
+    
+    log_message "INFO" "Instalasi software server selesai."
+}
 
-rm /var/www/html/*.html
-rm /etc/haproxy/sites-enabled/default
-rm /etc/haproxy/sites-available/default
-mkdir -p /var/www/html/vmess
-mkdir -p /var/www/html/vless
-mkdir -p /var/www/html/trojan
-mkdir -p /var/www/html/shadowsocks
-mkdir -p /var/www/html/shadowsocks2022
-mkdir -p /var/www/html/socks5
-mkdir -p /var/www/html/allxray
-#systemctl restart haproxy
-clear
-touch /usr/local/etc/xray/domain
-echo -e "${YB}Input Domain${NC} "
-echo " "
-read -rp "Input your domain : " -e dns
-if [ -z $dns ]; then
-echo -e "Nothing input for domain!"
-else
-echo "$dns" > /usr/local/etc/xray/domain
-echo "DNS=$dns" > /var/lib/dnsvps.conf
-fi
-clear
-systemctl stop haproxy
-domain=$(cat /usr/local/etc/xray/domain)
-curl https://get.acme.sh | sh
-source ~/.bashrc
-cd .acme.sh
-bash acme.sh --issue -d $domain --server letsencrypt --keylength ec-256 --fullchain-file /usr/local/etc/xray/fullchain.crt --key-file /usr/local/etc/xray/private.key --standalone --force
-cat /usr/local/etc/xray/fullchain.crt /usr/local/etc/xray/private.key > /etc/haproxy/certs/domain.pem
-clear
-echo -e "${GB}[ INFO ]${NC} ${YB}Setup haproxy & Xray Conf${NC}"
+# Fungsi untuk konfigurasi domain dan SSL
+configure_domain_and_ssl() {
+    log_message "INFO" "Memulai konfigurasi domain dan sertifikat SSL..."
+    
+    # Hapus file web default
+    rm -f /var/www/html/*.html
+    
+    # Minta input domain dari pengguna
+    read -rp "Masukkan domain Anda: " dns
+    if [ -z "$dns" ]; then
+        log_message "ERROR" "Tidak ada domain yang dimasukkan. Proses dibatalkan."
+        exit 1
+    else
+        echo "$dns" > /usr/local/etc/xray/domain
+        echo "DNS=$dns" > /var/lib/dnsvps.conf
+        log_message "INFO" "Domain '$dns' berhasil disimpan."
+    fi
+    
+    local domain=$(cat /usr/local/etc/xray/domain)
 
-mkdir -p /usr/local/etc/xray/adminenv
-mkdir -p /usr/local/etc/xray/agentenv
-wget -q -O /usr/local/etc/xray/config.json https://raw.githubusercontent.com/masjeho2/xray-bot/v1/config.json
-wget -q -O /etc/haproxy/haproxy.cfg https://raw.githubusercontent.com/masjeho2/xray-bot/v1/haproxy.cfg
-wget -q -O /var/www/html/robots.txt https://raw.githubusercontent.com/masjeho2/conf/main/robots.txt
-wget -q -O /usr/local/etc/xray/package.json https://raw.githubusercontent.com/masjeho2/xray-bot/v1/package.json
-wget -q -O /usr/local/etc/xray/adminenv/.env https://raw.githubusercontent.com/masjeho2/xray-bot/v1/adminenv/.env
-wget -q -O /usr/local/etc/xray/agenenv/.env https://raw.githubusercontent.com/masjeho2/xray-bot/v1/agenenv/.env
-wget -q -O /usr/local/etc/xray/bot-admin https://github.com/masjeho2/xray-bot/releases/download/v1.0.0/bot-admin
-wget -q -O /usr/local/etc/xray/bot-agent https://github.com/masjeho2/xray-bot/releases/download/v1.0.0/bot-agent
-#systemctl restart haproxy
-systemctl restart xray
-echo -e "${GB}[ INFO ]${NC} ${YB}Setup Done${NC}"
-sleep 2
-clear
-iptables -A FORWARD -m string --string "get_peers" --algo bm -j DROP
-iptables -A FORWARD -m string --string "announce_peer" --algo bm -j DROP
-iptables -A FORWARD -m string --string "find_node" --algo bm -j DROP
-iptables -A FORWARD -m string --algo bm --string "BitTorrent" -j DROP
-iptables -A FORWARD -m string --algo bm --string "BitTorrent protocol" -j DROP
-iptables -A FORWARD -m string --algo bm --string "peer_id=" -j DROP
-iptables -A FORWARD -m string --algo bm --string ".torrent" -j DROP
-iptables -A FORWARD -m string --algo bm --string "announce.php?passkey=" -j DROP
-iptables -A FORWARD -m string --algo bm --string "torrent" -j DROP
-iptables -A FORWARD -m string --algo bm --string "announce" -j DROP
-iptables -A FORWARD -m string --algo bm --string "info_hash" -j DROP
-iptables-save > /etc/iptables.up.rules
-iptables-restore -t < /etc/iptables.up.rules
-netfilter-persistent save
-netfilter-persistent reload
-# Mengganti atau menambahkan entri di /etc/security/limits.conf
-sed -i '/^\*.*soft.*nofile/s/.*/* soft nofile 1000000/' /etc/security/limits.conf
-grep -q '^\*.*soft.*nofile' /etc/security/limits.conf || echo "* soft nofile 1000000" >> /etc/security/limits.conf
+    # Issue SSL Certificate menggunakan acme.sh
+    log_message "INFO" "Menerbitkan sertifikat SSL untuk domain ${domain}..."
+    systemctl stop haproxy
+    curl https://get.acme.sh | sh
+    source ~/.bashrc
+    ~/.acme.sh/acme.sh --issue -d "$domain" --server letsencrypt --keylength ec-256 --fullchain-file /usr/local/etc/xray/fullchain.crt --key-file /usr/local/etc/xray/private.key --standalone --force
+    
+    # Gabungkan sertifikat untuk HAProxy
+    cat /usr/local/etc/xray/fullchain.crt /usr/local/etc/xray/private.key > /etc/haproxy/certs/domain.pem
+    log_message "INFO" "Sertifikat SSL berhasil dibuat dan dikonfigurasi untuk HAProxy."
+}
 
-sed -i '/^\*.*hard.*nofile/s/.*/* hard nofile 1000000/' /etc/security/limits.conf
-grep -q '^\*.*hard.*nofile' /etc/security/limits.conf || echo "* hard nofile 1000000" >> /etc/security/limits.conf
+# Fungsi untuk mengunduh file-file konfigurasi
+download_configurations() {
+    log_message "INFO" "Mengunduh file konfigurasi untuk Xray, HAProxy, dan Bot..."
+    
+    # Konfigurasi Xray dan HAProxy
+    wget -q -O /usr/local/etc/xray/config.json "${XRAY_BOT_REPO_V1}/config.json"
+    wget -q -O /etc/haproxy/haproxy.cfg "${XRAY_BOT_REPO_V1}/haproxy.cfg"
+    wget -q -O /var/www/html/robots.txt "${CONF_REPO}/robots.txt"
+    
+    # Konfigurasi Bot
+    wget -q -O /usr/local/etc/xray/package.json "${XRAY_BOT_REPO_V1}/package.json"
+    wget -q -O /usr/local/etc/xray/adminenv/.env "${XRAY_BOT_REPO_V1}/adminenv/.env"
+    wget -q -O /usr/local/etc/xray/agenenv/.env "${XRAY_BOT_REPO_V1}/agenenv/.env"
+    
+    # Binary Bot
+    wget -q -O /usr/local/etc/xray/bot-admin https://github.com/masjeho2/xray-bot/releases/download/v1.0.0/bot-admin
+    wget -q -O /usr/local/etc/xray/bot-agent https://github.com/masjeho2/xray-bot/releases/download/v1.0.0/bot-agent
+    
+    log_message "INFO" "Semua file konfigurasi berhasil diunduh."
+}
 
-sed -i '/^\*.*soft.*nproc/s/.*/* soft nproc 1000000/' /etc/security/limits.conf
-grep -q '^\*.*soft.*nproc' /etc/security/limits.conf || echo "* soft nproc 1000000" >> /etc/security/limits.conf
+# Fungsi untuk tuning sistem (Firewall dan Kernel)
+tune_system_performance() {
+    log_message "INFO" "Melakukan tuning performa sistem (Firewall & Kernel)..."
 
-sed -i '/^\*.*hard.*nproc/s/.*/* hard nproc 1000000/' /etc/security/limits.conf
-grep -q '^\*.*hard.*nproc' /etc/security/limits.conf || echo "* hard nproc 1000000" >> /etc/security/limits.conf
+    # Konfigurasi Firewall (iptables) untuk blokir torrent
+    log_message "INFO" "Menambahkan aturan iptables untuk memblokir trafik torrent."
+    IPTABLES_RULES=(
+        "get_peers" "announce_peer" "find_node" ".torrent"
+        "announce.php?passkey=" "torrent" "announce" "info_hash"
+        "BitTorrent" "BitTorrent protocol" "peer_id="
+    )
+    for rule in "${IPTABLES_RULES[@]}"; do
+        iptables -A FORWARD -m string --string "$rule" --algo bm -j DROP
+    done
+    iptables-save > /etc/iptables.up.rules
+    netfilter-persistent save
+    netfilter-persistent reload
 
-# Menambahkan entri di /etc/pam.d/common-session jika belum ada
-grep -q '^session\s\+required\s\+pam_limits.so' /etc/pam.d/common-session || echo "session required pam_limits.so" >> /etc/pam.d/common-session
+    # Konfigurasi Batas Sistem (limits.conf)
+    log_message "INFO" "Meningkatkan batas sistem (ulimit)."
+    cat > /etc/security/limits.conf << END
+* soft nofile 1000000
+* hard nofile 1000000
+* soft nproc 1000000
+* hard nproc 1000000
+END
+    grep -q '^session\s\+required\s\+pam_limits.so' /etc/pam.d/common-session || echo "session required pam_limits.so" >> /etc/pam.d/common-session
+    grep -q '^session\s\+required\s\+pam_limits.so' /etc/pam.d/common-session-noninteractive || echo "session required pam_limits.so" >> /etc/pam.d/common-session-noninteractive
+    ulimit -n 1000000
+    ulimit -u 100000
 
-# Menambahkan entri di /etc/pam.d/common-session-noninteractive jika belum ada
-grep -q '^session\s\+required\s\+pam_limits.so' /etc/pam.d/common-session-noninteractive || echo "session required pam_limits.so" >> /etc/pam.d/common-session-noninteractive
-
-ulimit -n 1000000
-ulimit -u 100000
-
-
-echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
-echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
-sed -i '/fs.file-max/d' /etc/sysctl.conf
-sed -i '/fs.inotify.max_user_instances/d' /etc/sysctl.conf
-sed -i '/net.ipv4.tcp_syncookies/d' /etc/sysctl.conf
-sed -i '/net.ipv4.tcp_fin_timeout/d' /etc/sysctl.conf
-sed -i '/net.ipv4.tcp_tw_reuse/d' /etc/sysctl.conf
-sed -i '/net.ipv4.tcp_max_syn_backlog/d' /etc/sysctl.conf
-sed -i '/net.ipv4.ip_local_port_range/d' /etc/sysctl.conf
-sed -i '/net.ipv4.tcp_max_tw_buckets/d' /etc/sysctl.conf
-sed -i '/net.ipv4.route.gc_timeout/d' /etc/sysctl.conf
-sed -i '/net.ipv4.tcp_synack_retries/d' /etc/sysctl.conf
-sed -i '/net.ipv4.tcp_syn_retries/d' /etc/sysctl.conf
-sed -i '/net.core.somaxconn/d' /etc/sysctl.conf
-sed -i '/net.core.netdev_max_backlog/d' /etc/sysctl.conf
-sed -i '/net.ipv4.tcp_timestamps/d' /etc/sysctl.conf
-sed -i '/net.ipv4.tcp_max_orphans/d' /etc/sysctl.conf
-sed -i '/net.ipv4.ip_forward/d' /etc/sysctl.conf
-echo "fs.file-max = 1000000
+    # Tuning Kernel (sysctl.conf)
+    log_message "INFO" "Melakukan tuning parameter kernel (sysctl)."
+    cat > /etc/sysctl.conf << END
+# Tuning by Auto-Installer
+net.core.default_qdisc=fq
+net.ipv4.tcp_congestion_control=bbr
+fs.file-max = 1000000
 fs.inotify.max_user_instances = 8192
 net.ipv4.tcp_syncookies = 1
 net.ipv4.tcp_fin_timeout = 30
@@ -195,14 +234,20 @@ net.core.somaxconn = 32768
 net.core.netdev_max_backlog = 32768
 net.ipv4.tcp_timestamps = 0
 net.ipv4.tcp_max_orphans = 32768
-net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
+net.ipv4.ip_forward = 1
+END
+    sysctl -p
+    log_message "INFO" "Tuning performa sistem selesai."
+}
 
-
-#systemctl restart haproxy
-
-cat > /etc/systemd/system/bot-admin.service << END
+# Fungsi untuk membuat layanan systemd
+setup_systemd_services() {
+    log_message "INFO" "Membuat layanan systemd untuk bot..."
+    
+    # Layanan Bot Admin
+    cat > /etc/systemd/system/bot-admin.service << END
 [Unit]
-Description=bot admin
+Description=Bot Admin Service
 After=network.target
 
 [Service]
@@ -214,128 +259,166 @@ User=root
 [Install]
 WantedBy=multi-user.target
 END
-cat > /etc/systemd/system/bot-agent.service << END
+
+    # Layanan Bot Agent
+    cat > /etc/systemd/system/bot-agent.service << END
 [Unit]
-Description=bot agent
+Description=Bot Agent Service
 After=network.target
+
 [Service]
 ExecStart=/usr/local/etc/xray/bot-agent
 Restart=always
 RestartSec=5
 User=root
+
 [Install]
 WantedBy=multi-user.target
 END
 
-cd /usr/bin
-echo -e "${GB}[ INFO ]${NC} ${YB}Downloading Main Menu${NC}"
-wget -q -O /usr/bin/menu "https://raw.githubusercontent.com/masjeho2/v1/xray/menu/menu.sh"
+    log_message "INFO" "Pembuatan layanan systemd selesai."
+}
 
+# Fungsi untuk mengunduh skrip menu
+download_menu_scripts() {
+    log_message "INFO" "Mengunduh skrip-skrip menu..."
+    
+    local scripts=(
+        "menu:menu/menu.sh"
+        "dns:other/dns.sh"
+        "certxray:other/certxray.sh"
+        "xraymod:other/xraymod.sh"
+        "xrayofficial:other/xrayofficial.sh"
+        "about:other/about.sh"
+        "clear-log:other/clear-log.sh"
+    )
+    
+    for script_info in "${scripts[@]}"; do
+        local filename="${script_info%%:*}"
+        local filepath="${script_info#*:}"
+        wget -q -O "/usr/bin/${filename}" "${MENU_REPO}/${filepath}"
+    done
+    
+    log_message "INFO" "Pengunduhan skrip menu selesai."
+}
 
-sleep 0.5
-echo -e "${GB}[ INFO ]${NC} ${YB}Downloading Other Menu${NC}"
+# Fungsi untuk menyelesaikan instalasi (izin, cron, profil)
+finalize_installation() {
+    log_message "INFO" "Menyelesaikan tahap akhir instalasi..."
+    
+    # Atur izin eksekusi
+    log_message "INFO" "Mengatur izin file (chmod)..."
+    chmod +x /usr/local/etc/xray/bot-admin
+    chmod +x /usr/local/etc/xray/bot-agent
+    chmod +x /usr/bin/{menu,dns,certxray,xraymod,xrayofficial,about,clear-log}
+    
+    # Atur cron jobs
+    log_message "INFO" "Menambahkan jadwal tugas (cron jobs)..."
+    cat > /etc/crontab << END
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
-wget -q -O /usr/bin/dns "https://raw.githubusercontent.com/masjeho2/v1/xray/other/dns.sh"
-wget -q -O /usr/bin/certxray "https://raw.githubusercontent.com/masjeho2/v1/xray/other/certxray.sh"
-wget -q -O /usr/bin/xraymod "https://raw.githubusercontent.com/masjeho2/v1/xray/other/xraymod.sh"
-wget -q -O /usr/bin/xrayofficial "https://raw.githubusercontent.com/masjeho2/v1/xray/other/xrayofficial.sh"
-wget -q -O /usr/bin/about "https://raw.githubusercontent.com/masjeho2/v1/xray/other/about.sh"
-wget -q -O /usr/bin/clear-log "https://raw.githubusercontent.com/masjeho2/v1/xray/other/clear-log.sh"
-
-echo -e "${GB}[ INFO ]${NC} ${YB}Download All Menu Done${NC}"
-sleep 2
-
-
-
-
-
-
-
-
-
-clearecho -e "${GB}[ INFO ]${NC} ${YB}Setting Permission${NC}"
-chmod +x /usr/local/etc/xray/bot-admin
-chmod +x /usr/local/etc/xray/bot-agent
-chmod +x /usr/bin/dns
-chmod +x /usr/bin/certxray
-chmod +x /usr/bin/xraymod
-chmod +x /usr/bin/xrayofficial
-chmod +x /usr/bin/about
-chmod +x /usr/bin/clear-log
-chmod +x /usr/bin/menu
-cd
-
-echo "*/5 * * * * root clear-log" >> /etc/crontab
-echo "*/3 * * * * root truncate -s 0 /var/log/xray/access.log" >> /etc/crontab
-echo "0 0 */7 * * root truncate -s 0 /var/log/xray-admin-mongo.log" >> /etc/crontab
-echo "0 0 */7 * * root curl -L -o /usr/local/share/xray/geoip.dat https://github.com/malikshi/v2ray-rules-dat/releases/latest/download/geoip.dat && curl -L -o /usr/local/share/xray/geosite.dat https://github.com/malikshi/v2ray-rules-dat/releases/latest/download/geosite.dat && systemctl restart xray" >> /etc/crontab
-systemctl daemon-reload
-systemctl restart cron
-systemctl enable bot-admin
-systemctl enable bot-agent
-systemctl enable haproxy
-systemctl enable xray
-#systemctl start bot-admin
-#systemctl start bot-agent
-systemctl start haproxy
-systemctl start xray
-systemctl restart haproxy
-systemctl restart xray
-#systemctl restart bot-admin
-#systemctl restart bot-agent
-clear
-
-
-echo -e "${GB}[ INFO ]${NC} ${YB}Setting Permission Done${NC}"
-sleep 2
-cd /usr/local/etc/xray
-npm install
-npm install -g pm2
-cd
-
-echo -e "${GB}[ INFO ]${NC} ${YB}Setting Profile${NC}"
-cat > /root/.profile << END
-if [ "$BASH" ]; then
-if [ -f ~/.bashrc ]; then
-. ~/.bashrc
-fi
+*/5 * * * * root clear-log
+*/3 * * * * root truncate -s 0 /var/log/xray/access.log
+0 0 */7 * * root truncate -s 0 /var/log/xray-admin-mongo.log
+0 1 * * 1 root curl -L -o /usr/local/share/xray/geoip.dat https://github.com/malikshi/v2ray-rules-dat/releases/latest/download/geoip.dat && curl -L -o /usr/local/share/xray/geosite.dat https://github.com/malikshi/v2ray-rules-dat/releases/latest/download/geosite.dat && systemctl restart xray
+END
+    
+    # Instal dependensi Node.js
+    log_message "INFO" "Menginstal dependensi Node.js (npm)..."
+    cd /usr/local/etc/xray
+    npm install
+    npm install -g pm2
+    cd
+    
+    # Atur profil root
+    log_message "INFO" "Mengonfigurasi profil shell untuk root..."
+    cat > /root/.profile << END
+# ~/.profile: executed by the command interpreter for login shells.
+if [ "\$BASH" ]; then
+    if [ -f ~/.bashrc ]; then
+        . ~/.bashrc
+    fi
 fi
 mesg n || true
 clear
-
-# Display system information using neofetch
 neofetch
-
-# Prompt user to type "menu"
-echo "Please type 'menu' to continue."
+echo ""
+echo "Instalasi selesai. Silakan ketik 'menu' untuk menampilkan opsi."
 END
-chmod 644 /root/.profile
-clear
-echo ""
-echo ""
-echo -e "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" | lolcat -a -d 10   
-echo ""
-echo -e "                ${WB}PREMIUM SCRIPT${NC}"
-echo ""
-echo -e "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" | lolcat -a -d 10 
-echo -e "  ${WB}»»» Protocol Service «««  |  »»» Network Protocol «««${NC}  "
-echo -e "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" | lolcat -a -d 10 
-echo -e "  ${YB}- Vless${NC}                   ${WB}|${NC}  ${YB}- Websocket (CDN) non TLS${NC}"
-echo -e "  ${YB}- Vmess${NC}                   ${WB}|${NC}  ${YB}- Websocket (CDN) TLS${NC}"
-echo -e "  ${YB}- Trojan${NC}                  ${WB}|${NC}  ${YB}- gRPC (CDN) TLS${NC}"
-echo -e "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" | lolcat -a -d 10 
-echo -e "               ${WB}»»» Network Port Service «««${NC}             "
-echo -e "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" | lolcat -a -d 10 
-echo -e "  ${YB}- HTTPS : 443 ${NC}"
-echo -e "  ${YB}- HTTP  : 80 ${NC}"
-echo -e "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" | lolcat -a -d 10 
-echo ""
-rm -f install
-secs_to_human "$(($(date +%s) - ${start}))"
-echo -e "${YB}[ WARNING ] reboot now ? (Y/N)${NC} "
-read answer
-if [ "$answer" == "${answer#[Yy]}" ] ;then
-exit 0
-else
-reboot
-fi
+    chmod 644 /root/.profile
+    
+    # Reload, enable, dan restart layanan
+    log_message "INFO" "Mengaktifkan dan merestart semua layanan terkait..."
+    systemctl daemon-reload
+    systemctl enable cron bot-admin bot-agent haproxy xray
+    systemctl restart cron haproxy xray
+    # systemctl start bot-admin bot-agent # Mungkin lebih baik dimulai setelah reboot
+    
+    log_message "INFO" "Penyelesaian instalasi selesai."
+}
+
+# Fungsi untuk menampilkan ringkasan instalasi
+display_summary() {
+    clear
+    echo ""
+    echo -e "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" | lolcat -a -d 5
+    echo -e "                 ${WB}INSTALASI SCRIPT SELESAI${NC}                "
+    echo -e "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" | lolcat -a -d 5
+    echo ""
+    echo -e "  ${WB}»»» Layanan Protokol «««   |  »»» Protokol Jaringan «««${NC}  "
+    echo -e "  ───────────────────────────  |  ───────────────────────────"
+    echo -e "  ${YB}- Vless${NC}                    ${WB}|${NC}  ${YB}- Websocket (CDN) non TLS${NC}"
+    echo -e "  ${YB}- Vmess${NC}                    ${WB}|${NC}  ${YB}- Websocket (CDN) TLS${NC}"
+    echo -e "  ${YB}- Trojan${NC}                   ${WB}|${NC}  ${YB}- gRPC (CDN) TLS${NC}"
+    echo ""
+    echo -e "               ${WB}»»» Port Jaringan Aktif «««${NC}             "
+    echo -e "  ───────────────────────────────────────────────────────────"
+    echo -e "  ${YB}- HTTPS : 443 ${NC}"
+    echo -e "  ${YB}- HTTP  : 80 ${NC}"
+    echo -e "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" | lolcat -a -d 5
+    echo ""
+}
+
+# --- [BAGIAN 3: EKSEKUSI UTAMA] ---
+
+main() {
+    # Hapus file instalasi lama jika ada
+    rm -f install
+    clear
+
+    # Jalankan semua fungsi secara berurutan
+    update_system
+    install_dependencies
+    setup_directories
+    setup_xray
+    install_server_software
+    configure_domain_and_ssl
+    download_configurations
+    tune_system_performance
+    setup_systemd_services
+    download_menu_scripts
+    finalize_installation
+    display_summary
+
+    # Hapus file skrip ini setelah selesai
+    rm -f "$0"
+    
+    # Tampilkan durasi total
+    secs_to_human "$(($(date +%s) - start_time))"
+    
+    # Minta konfirmasi untuk reboot
+    echo ""
+    read -rp $'\e[33;1m[ PERINGATAN ]\e[0m \e[37;1mApakah Anda ingin me-reboot server sekarang? (Y/N): \e[0m' answer
+    if [[ "$answer" =~ ^[Yy]$ ]]; then
+        log_message "INFO" "Server akan di-reboot dalam 5 detik..."
+        sleep 5
+        reboot
+    else
+        log_message "INFO" "Reboot dibatalkan. Silakan reboot secara manual nanti."
+        exit 0
+    fi
+}
+
+# Panggil fungsi utama untuk memulai eksekusi
+main
