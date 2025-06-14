@@ -1,3 +1,42 @@
-Skrip Instalasi Otomatis Xray, HAProxy & Bot ManajemenSkrip ini dirancang untuk mengotomatiskan seluruh proses penyiapan server proxy premium menggunakan Xray-core, dengan HAProxy sebagai reverse proxy untuk menangani TLS, serta bot Telegram untuk manajemen pengguna yang mudah.✨ Fitur UtamaInstalasi Otomatis Penuh: Menyiapkan semua komponen yang diperlukan dari awal hingga akhir dengan intervensi minimal.Multi-Protokol Xray: Langsung mengonfigurasi protokol populer:VLESS (WebSocket + gRPC)VMess (WebSocket + gRPC)Trojan (gRPC)Sertifikat SSL Gratis: Otomatis menerbitkan dan memperbarui sertifikat SSL dari Let's Encrypt (via acme.sh) untuk domain Anda.Reverse Proxy dengan HAProxy: Menggunakan HAProxy untuk menangani lalu lintas masuk pada port 443 dan 80, serta mengarahkannya ke layanan Xray yang sesuai.Bot Manajemen: Dilengkapi dengan bot Telegram (admin dan agent) untuk menambah, menghapus, dan mengelola pengguna tanpa perlu login ke server.Tuning Performa Server:Mengoptimalkan parameter kernel (sysctl.conf) untuk throughput jaringan yang tinggi.Meningkatkan batas sistem (limits.conf) untuk menangani banyak koneksi.Mengaktifkan TCP BBR untuk kontrol kongesti yang lebih baik.Keamanan Dasar:Memasang fail2ban untuk melindungi dari serangan brute-force.Menambahkan aturan iptables untuk memblokir lalu lintas torrent.Menu Manajemen Sederhana: Menyediakan serangkaian skrip menu di terminal untuk pengelolaan pasca-instalasi (misalnya: menu, certxray, dns).📋 PersyaratanSebelum menjalankan skrip ini, pastikan Anda telah memenuhi semua persyaratan berikut:Server (VPS): Server baru yang bersih (fresh install).Sistem Operasi: Ubuntu 20.04 / 22.04 atau Debian 10 / 11.CPU & RAM: Minimal 1 Core CPU dan 1 GB RAM.Domain: Anda harus memiliki sebuah domain yang sudah diarahkan (A Record) ke alamat IP server Anda.Akses Root: Anda harus login sebagai pengguna root.PENTING: Proses penerbitan sertifikat SSL akan gagal jika domain Anda belum mengarah ke IP server. Pastikan untuk mengaturnya terlebih dahulu.🚀 Cara InstalasiInstalasi sangat mudah. Cukup login ke server Anda sebagai root, lalu jalankan perintah di bawah ini.bash -c "$(curl -sL https://raw.githubusercontent.com/masjeho2/xray-bot/refs/heads/v1/install)"
-Skrip akan berjalan secara otomatis. Anda hanya perlu memasukkan nama domain Anda ketika diminta.Setelah instalasi selesai, server akan meminta untuk di-reboot. Setelah reboot, login kembali ke server dan ketik perintah berikut untuk menampilkan panel menu:menu
+Skrip Instalasi Otomatis Xray, HAProxy & Bot Manajemen
+Lisensi
+
+Sistem Operasi
+
+Distro
+Skrip ini dirancang untuk mengotomatiskan seluruh proses penyiapan server proxy premium menggunakan Xray-core, dengan HAProxy sebagai reverse proxy untuk menangani TLS, serta bot Telegram untuk manajemen pengguna yang mudah.
+✨ Fitur Utama
+ * Instalasi Otomatis Penuh: Menyiapkan semua komponen yang diperlukan dari awal hingga akhir dengan intervensi minimal.
+ * Multi-Protokol Xray: Langsung mengonfigurasi protokol populer:
+   * VLESS (WebSocket + gRPC)
+   * VMess (WebSocket + gRPC)
+   * Trojan (gRPC)
+ * Sertifikat SSL Gratis: Otomatis menerbitkan dan memperbarui sertifikat SSL dari Let's Encrypt (via acme.sh) untuk domain Anda.
+ * Reverse Proxy dengan HAProxy: Menggunakan HAProxy untuk menangani lalu lintas masuk pada port 443 dan 80, serta mengarahkannya ke layanan Xray yang sesuai.
+ * Bot Manajemen: Dilengkapi dengan bot Telegram (admin dan agent) untuk menambah, menghapus, dan mengelola pengguna tanpa perlu login ke server.
+ * Tuning Performa Server:
+   * Mengoptimalkan parameter kernel (sysctl.conf) untuk throughput jaringan yang tinggi.
+   * Meningkatkan batas sistem (limits.conf) untuk menangani banyak koneksi.
+   * Mengaktifkan TCP BBR untuk kontrol kongesti yang lebih baik.
+ * Keamanan Dasar:
+   * Memasang fail2ban untuk melindungi dari serangan brute-force.
+   * Menambahkan aturan iptables untuk memblokir lalu lintas torrent.
+ * Menu Manajemen Sederhana: Menyediakan serangkaian skrip menu di terminal untuk pengelolaan pasca-instalasi (misalnya: menu, certxray, dns).
+📋 Persyaratan
+Sebelum menjalankan skrip ini, pastikan Anda telah memenuhi semua persyaratan berikut:
+ * Server (VPS): Server baru yang bersih (fresh install).
+ * Sistem Operasi: Ubuntu 20.04 / 22.04 atau Debian 10 / 11.
+ * CPU & RAM: Minimal 1 Core CPU dan 1 GB RAM.
+ * Domain: Anda harus memiliki sebuah domain yang sudah diarahkan (A Record) ke alamat IP server Anda.
+ * Akses Root: Anda harus login sebagai pengguna root.
+> PENTING: Proses penerbitan sertifikat SSL akan gagal jika domain Anda belum mengarah ke IP server. Pastikan untuk mengaturnya terlebih dahulu.
+> 
+🚀 Cara Instalasi
+Instalasi sangat mudah. Cukup login ke server Anda sebagai root, lalu jalankan perintah di bawah ini.
+bash -c "$(curl -sL https://raw.githubusercontent.com/masjeho2/xray-bot/refs/heads/v1/install)"
+
+Skrip akan berjalan secara otomatis. Anda hanya perlu memasukkan nama domain Anda ketika diminta.
+Setelah instalasi selesai, server akan meminta untuk di-reboot. Setelah reboot, login kembali ke server dan ketik perintah berikut untuk menampilkan panel menu:
+menu
+
 Dari menu tersebut, Anda dapat mulai mengelola layanan dan pengguna Anda.
