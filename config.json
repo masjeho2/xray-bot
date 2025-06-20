@@ -210,6 +210,7 @@
   "stats": {},
   "api": {
     "services": [
+      "HandlerService",
       "StatsService"
     ],
     "tag": "api"
