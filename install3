@@ -112,7 +112,7 @@ install_server_software() {
     ln -fs /usr/share/zoneinfo/Asia/Jakarta /etc/localtime
 
     # Instal HAProxy
-    add-apt-repository ppa:vbernat/haproxy-2.8 -y
+    #add-apt-repository ppa:vbernat/haproxy-2.8 -y
     apt-get update
     apt-get install -y haproxy
 
