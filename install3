@@ -117,10 +117,10 @@ install_server_software() {
     apt-get install -y haproxy
 
     # Instal MongoDB Database Tools
-    curl -fsSL https://pgp.mongodb.com/server-7.0.asc | gpg --dearmor -o /usr/share/keyrings/mongodb-server-7.0.gpg
-    echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/ubuntu $(lsb_release -cs)/mongodb-org/7.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-7.0.list
-    apt-get update
-    apt-get install -y mongodb-database-tools
+    #curl -fsSL https://pgp.mongodb.com/server-7.0.asc | gpg --dearmor -o /usr/share/keyrings/mongodb-server-7.0.gpg
+    #echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/ubuntu $(lsb_release -cs)/mongodb-org/7.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+    #apt-get update
+    #apt-get install -y mongodb-database-tools
 
     # Instal Node.js
     #curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
@@ -176,8 +176,8 @@ download_configurations() {
     #wget -q -O /usr/local/etc/xray/agenenv/.env "${XRAY_BOT_REPO_V1}/agenenv/.env"
     
     # Binary Bot
-    wget -q -O /usr/local/etc/xray/bot-admin https://github.com/masjeho2/xray-bot/releases/latest/download/bot-admin
-    wget -q -O /usr/local/etc/xray/bot-agent https://github.com/masjeho2/xray-bot/releases/latest/download/bot-agent
+    #wget -q -O /usr/local/etc/xray/bot-admin https://github.com/masjeho2/xray-bot/releases/latest/download/bot-admin
+    #wget -q -O /usr/local/etc/xray/bot-agent https://github.com/masjeho2/xray-bot/releases/latest/download/bot-agent
     
     log_message "INFO" "Semua file konfigurasi berhasil diunduh."
 }
@@ -308,10 +308,10 @@ finalize_installation() {
     
     # Atur izin eksekusi
     log_message "INFO" "Mengatur izin file (chmod)..."
-    #rm /etc/systemd/system/bot-agent.service
-    #rm /etc/systemd/system/bot-admin.service
-    chmod +x /usr/local/etc/xray/bot-admin
-    chmod +x /usr/local/etc/xray/bot-agent
+    rm /etc/systemd/system/bot-agent.service
+    rm /etc/systemd/system/bot-admin.service
+    #chmod +x /usr/local/etc/xray/bot-admin
+    #chmod +x /usr/local/etc/xray/bot-agent
     chmod +x /usr/bin/{menu,dns,certxray,xraymod,xrayofficial,about,clear-log}
     
     # Atur cron jobs
