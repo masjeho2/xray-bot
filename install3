@@ -123,8 +123,8 @@ install_server_software() {
     #apt-get install -y mongodb-database-tools
 
     # Instal Node.js
-    #curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
-    #apt-get install -y nodejs
+    curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+    apt-get install -y nodejs
     
     log_message "INFO" "Instalasi software server selesai."
 }
