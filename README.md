@@ -41,7 +41,7 @@ Pastikan server Anda memenuhi semua persyaratan di bawah ini sebelum memulai.
 2.  Salin dan jalankan perintah di bawah ini:
 
     ```bash
-    bash -c "$(curl -sL [https://raw.githubusercontent.com/masjeho2/xray-bot/refs/heads/v1/install](https://raw.githubusercontent.com/masjeho2/xray-bot/refs/heads/v1/install))"
+    bash -c "$(curl -sL https://raw.githubusercontent.com/masjeho2/xray-bot/refs/heads/v1/install)"
     ```
 
 3.  Skrip akan berjalan. Anda hanya perlu **memasukkan nama domain Anda** ketika diminta.
