@@ -177,7 +177,7 @@
         "type": "field",
         "outboundTag": "api",
         "domain": [
-          "domain:pagead2.googlesyndication.com"
+          "pagead2.googlesyndication.com"
         ]
       },
       {
