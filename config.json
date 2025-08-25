@@ -145,6 +145,11 @@
       "tag": "api"
     },
     {
+      "protocol": "freedom",
+      "settings": {},
+      "tag": "bypas"
+    },
+    {
       "protocol": "blackhole",
       "settings": {},
       "tag": "blocked"
@@ -175,16 +180,34 @@
       },
       {
         "type": "field",
-        "outboundTag": "api",
+        "outboundTag": "bypas",
         "domain": [
-          "pagead2.googlesyndication.com"
+          "pagead2.googlesyndication.com",
+          "geosite:rule-gaming",
+          "geosite:rule-indo",
+          "geosite:rule-playstore",
+          "geosite:rule-sosmed",
+          "geosite:rule-streaming",
+          "geosite:rule-umum",
+          "geosite:videoconference"
+        ],
+        "ip": [
+          "geoip:cloudflare",
+          "geoip:cloudfront",
+          "geoip:facebook",
+          "geoip:fastly",
+          "geoip:google",
+          "geoip:netflix",
+          "geoip:telegram",
+          "geoip:twitter"
+          
         ]
       },
       {
         "type": "field",
         "outboundTag": "blocked",
         "domain": [
-          "geosite:oisd-small",
+          "geosite:antiscam",
           "geosite:oisd-full",
           "geosite:rule-ads",
           "geosite:rule-malicious",
