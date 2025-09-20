@@ -86,7 +86,7 @@ setup_xray() {
     log_message "INFO" "Memulai instalasi dan konfigurasi Xray..."
 
     # Instal Xray Core
-    bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" - install --beta
+    bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" - install
     
     # Backup Xray binary asli
     cp /usr/local/bin/xray /backup/xray.official.backup
