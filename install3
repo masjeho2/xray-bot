@@ -121,7 +121,11 @@ END
     
     # Download GeoIP & GeoSite data
     log_message "INFO" "Mengunduh file GeoIP dan GeoSite..."
-    #curl -L -o /usr/local/share/xray/geoip.dat https://github.com/malikshi/v2ray-rules-dat/releases/latest/download/geoip.dat
+    sudo mkdir -p /var/log/xray
+    sudo chown -R nobody /var/log/xray
+    ls -ld /var/log/xray
+    sudo mkdir -p /usr/local/share/xray/
+    curl -L -o /usr/local/share/xray/geoip.dat https://github.com/malikshi/v2ray-rules-dat/releases/latest/download/geoip.dat
     curl -L -o /usr/local/share/xray/geosite.dat https://github.com/malikshi/v2ray-rules-dat/releases/latest/download/geosite.dat
     
     log_message "INFO" "Instalasi Xray selesai."
@@ -336,7 +340,10 @@ finalize_installation() {
     #chmod +x /usr/local/etc/xray/bot-admin
     #chmod +x /usr/local/etc/xray/bot-agent
     chmod +x /usr/bin/{menu,dns,certxray,xraymod,xrayofficial,about,clear-log}
-    
+    mkdir -p /root/api
+    cd /root/api
+    npm install -g pm2
+    cd /root
     # Atur cron jobs
     log_message "INFO" "Menambahkan jadwal tugas (cron jobs)..."
     cat > /etc/crontab << END
