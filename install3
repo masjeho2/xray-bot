@@ -86,8 +86,8 @@ setup_xray() {
     log_message "INFO" "Memulai instalasi dan konfigurasi Xray..."
 
     # Instal Xray Core
-    #bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" - install
-    wget -q -O /usr/local/bin/xray "https://github.com/dharak36/xray-onering/raw/refs/heads/main/xray.linux.amd64.64bit"
+    bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" - install
+    #wget -q -O /usr/local/bin/xray "https://github.com/dharak36/xray-onering/raw/refs/heads/main/xray.linux.amd64.64bit"
     chmod +x /usr/local/bin/xray
     cat > /etc/systemd/system/xray.service << END
 [Unit]
