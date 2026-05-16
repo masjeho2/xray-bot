@@ -15,6 +15,17 @@
       "tag": "api"
     },
     {
+      "tag": "dns-inbound",
+      "listen": "127.0.0.1",
+      "port": 10053,
+      "protocol": "dokodemo-door",
+      "settings": {
+        "address": "8.8.8.8",
+        "port": 53,
+        "network": "tcp,udp"
+      }
+    },
+    {
       "tag": "vmess-ws",
       "listen": "127.0.0.1",
       "port": "10001",
@@ -26,10 +37,14 @@
         "network": "ws",
         "wsSettings": {
           "path": "/vmess",
-          "alpn": [
-            "h2",
-            "http/1.1"
-          ]
+          "alpn": ["h2", "http/1.1"]
+        },
+        "sockopt": {
+          "tcpFastOpen": true,
+          "tcpKeepAliveInterval": 30,
+          "tcpKeepAliveIdle": 60,
+          "tcpNoDelay": true,
+          "mark": 0
         }
       }
     },
@@ -46,10 +61,14 @@
         "network": "ws",
         "wsSettings": {
           "path": "/vless-ws",
-          "alpn": [
-            "h2",
-            "http/1.1"
-          ]
+          "alpn": ["h2", "http/1.1"]
+        },
+        "sockopt": {
+          "tcpFastOpen": true,
+          "tcpKeepAliveInterval": 30,
+          "tcpKeepAliveIdle": 60,
+          "tcpNoDelay": true,
+          "mark": 0
         }
       }
     },
@@ -66,10 +85,14 @@
         "network": "ws",
         "wsSettings": {
           "path": "/trojan-ws",
-          "alpn": [
-            "h2",
-            "http/1.1"
-          ]
+          "alpn": ["h2", "http/1.1"]
+        },
+        "sockopt": {
+          "tcpFastOpen": true,
+          "tcpKeepAliveInterval": 30,
+          "tcpKeepAliveIdle": 60,
+          "tcpNoDelay": true,
+          "mark": 0
         }
       }
     },
@@ -85,10 +108,14 @@
         "network": "grpc",
         "grpcSettings": {
           "serviceName": "vmess-grpc",
-          "alpn": [
-            "h2",
-            "http/1.1"
-          ]
+          "alpn": ["h2", "http/1.1"]
+        },
+        "sockopt": {
+          "tcpFastOpen": true,
+          "tcpKeepAliveInterval": 30,
+          "tcpKeepAliveIdle": 60,
+          "tcpNoDelay": true,
+          "mark": 0
         }
       }
     },
@@ -105,10 +132,14 @@
         "network": "grpc",
         "grpcSettings": {
           "serviceName": "vless-grpc",
-          "alpn": [
-            "h2",
-            "http/1.1"
-          ]
+          "alpn": ["h2", "http/1.1"]
+        },
+        "sockopt": {
+          "tcpFastOpen": true,
+          "tcpKeepAliveInterval": 30,
+          "tcpKeepAliveIdle": 60,
+          "tcpNoDelay": true,
+          "mark": 0
         }
       }
     },
@@ -126,10 +157,14 @@
         "network": "grpc",
         "grpcSettings": {
           "serviceName": "trojan-grpc",
-          "alpn": [
-            "h2",
-            "http/1.1"
-          ]
+          "alpn": ["h2", "http/1.1"]
+        },
+        "sockopt": {
+          "tcpFastOpen": true,
+          "tcpKeepAliveInterval": 30,
+          "tcpKeepAliveIdle": 60,
+          "tcpNoDelay": true,
+          "mark": 0
         }
       }
     }
@@ -137,7 +172,18 @@
   "outbounds": [
     {
       "protocol": "freedom",
-      "settings": {}
+      "settings": {
+        "domainStrategy": "UseIPv4"
+      },
+      "streamSettings": {
+        "sockopt": {
+          "tcpFastOpen": true,
+          "tcpKeepAliveInterval": 30,
+          "tcpNoDelay": true,
+          "mark": 0
+        }
+      },
+      "tag": "direct"
     },
     {
       "protocol": "freedom",
@@ -150,6 +196,16 @@
       "tag": "bypas"
     },
     {
+      "tag": "dns-out",
+      "protocol": "dns",
+      "settings": {
+        "address": "8.8.8.8",
+        "port": 53,
+        "network": "udp",
+        "nonIPQuery": "skip"
+      }
+    },
+    {
       "protocol": "blackhole",
       "settings": {},
       "tag": "blocked"
@@ -157,6 +213,11 @@
   ],
   "routing": {
     "rules": [
+      {
+        "type": "field",
+        "inboundTag": ["dns-inbound"],
+        "outboundTag": "dns-out"
+      },
       {
         "type": "field",
         "ip": [
@@ -174,48 +235,64 @@
           "::1/128",
           "fc00::/7",
           "fe80::/10"
-          
         ],
         "outboundTag": "blocked"
       },
       {
         "type": "field",
         "outboundTag": "bypas",
-        "domain": [
-          "pagead2.googlesyndication.com"
-          
-        ]
+        "domain": ["pagead2.googlesyndication.com"]
       },
-      
       {
-        "inboundTag": [
-          "api"
-        ],
+        "inboundTag": ["api"],
         "outboundTag": "api",
         "type": "field"
       },
       {
         "type": "field",
         "outboundTag": "blocked",
-        "protocol": [
-          "bittorrent"
-        ]
+        "protocol": ["bittorrent"]
       }
     ]
   },
+  "dns": {
+    "hosts": {
+      "dns.google": ["8.8.8.8", "8.8.4.4"]
+    },
+    "servers": [
+      {
+        "address": "https://8.8.8.8/dns-query",
+        "domains": ["geosite:google", "geosite:github", "geosite:cloudflare"],
+        "skipFallback": false,
+        "queryStrategy": "UseIPv4"
+      },
+      {
+        "address": "https://1.1.1.1/dns-query",
+        "domains": ["geosite:category-ads-all"],
+        "skipFallback": false,
+        "queryStrategy": "UseIPv4"
+      },
+      "8.8.8.8",
+      "8.8.4.4",
+      "localhost"
+    ],
+    "disableCache": false
+  },
   "stats": {},
   "api": {
-    "services": [
-      "HandlerService",
-      "StatsService"
-    ],
+    "services": ["HandlerService", "StatsService"],
     "tag": "api"
   },
   "policy": {
     "levels": {
       "0": {
+        "handshake": 4,
+        "connIdle": 120,
+        "uplinkOnly": 2,
+        "downlinkOnly": 5,
         "statsUserDownlink": true,
-        "statsUserUplink": true
+        "statsUserUplink": true,
+        "bufferSize": 512
       }
     },
     "system": {
