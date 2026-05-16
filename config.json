@@ -78,7 +78,7 @@
       "port": "10003",
       "protocol": "trojan",
       "settings": {
-        "decryption": "none",
+        
         "clients": []
       },
       "streamSettings": {
