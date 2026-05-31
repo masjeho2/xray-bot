@@ -194,15 +194,9 @@ install_haproxy() {
         log_message "INFO" "Menambahkan repo resmi HAProxy 2.8 (haproxy.debian.net)..."
 
         # Tambah GPG key
-        curl -fsSL https://haproxy.debian.net/bernat.debian.org.gpg \
-            | gpg --dearmor -o /usr/share/keyrings/haproxy.debian.net.gpg
-
-        # Deteksi distro otomatis
-        local distro
-        distro=$(lsb_release -cs)
-        echo "deb [signed-by=/usr/share/keyrings/haproxy.debian.net.gpg] \
-https://haproxy.debian.net ${distro}-backports-2.8 main" \
-            > /etc/apt/sources.list.d/haproxy.list
+        add-apt-repository ppa:vbernat/haproxy-2.8 -y
+    
+    
 
         apt-get update
         apt-get install -y "haproxy=2.8.*"
