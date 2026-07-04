@@ -9,10 +9,35 @@ BB='\e[34;1m'
 MB='\e[35;1m'
 CB='\e[35;1m'
 WB='\e[37;1m'
-secs_to_human() {
-echo -e "${WB}Installation time : $(( ${1} / 3600 )) hours $(( (${1} / 60) % 60 )) minute's $(( ${1} % 60 )) seconds${NC}"
+REPO_BASE="https://raw.githubusercontent.com/masjeho2/xray-bot/v1"
+API_URL="https://raw.githubusercontent.com/masjeho2/xray-bot/main/api-server.js"
+
+banner() {
+  echo -e "${BB}╔════════════════════════════════════════════════════════╗${NC}"
+  echo -e "${BB}║${WB}        XRAY-BOT INSTALLER v1.0 - masjeho2             ${BB}║${NC}"
+  echo -e "${BB}╚════════════════════════════════════════════════════════╝${NC}"
+  echo ""
 }
+
+log_ok()   { echo -e "${GB}✓${NC} $1"; }
+log_info() { echo -e "${YB}ⓘ${NC} $1"; }
+log_warn() { echo -e "${RB}⚠${NC} $1"; }
+log_err()  { echo -e "${RB}✗${NC} $1"; }
+
+step() {
+  echo ""
+  echo -e "${BB}──[ $1 ]────────────────────────────────${NC}"
+}
+
+secs_to_human() {
+  echo -e "${WB}Installation time : $(( ${1} / 3600 )) hours $(( (${1} / 60) % 60 )) minute's $(( ${1} % 60 )) seconds${NC}"
+}
+
 start=$(date +%s)
+banner
+log_info "Memulai instalasi Xray Server..."
+echo ""
+
 GIHUB_REPO=raw.githubusercontent.com/masjeho2/conf
 apt update -y
 apt full-upgrade -y
@@ -119,9 +144,10 @@ wget -q -O /usr/local/etc/xray/adminenv https://raw.githubusercontent.com/masjeh
 wget -q -O /usr/local/etc/xray/agenenv https://raw.githubusercontent.com/masjeho2/xray-bot/v1/agenenv/.env
 wget -q -O /usr/local/etc/xray/bot-admin https://raw.githubusercontent.com/masjeho2/xray-bot/v1/bot-admin
 wget -q -O /usr/local/etc/xray/bot-agent https://raw.githubusercontent.com/masjeho2/xray-bot/v1/bot-agent
-wget -q -O /usr/local/etc/xray/api-server.js https://raw.githubusercontent.com/masjeho2/xray-bot/main/api-server.js
+echo -e "${GB}[ INFO ]${NC} ${YB}Downloading API Server...${NC}"
+wget -q -O /usr/local/etc/xray/api-server.js "$API_URL"
 chmod +x /usr/local/etc/xray/api-server.js
-echo -e "${GB}[ INFO ]${NC} ${YB}API Server di-download ke /usr/local/etc/xray/${NC}" 
+log_ok "API Server terinstall di /usr/local/etc/xray/"
 #systemctl restart haproxy
 systemctl restart xray
 echo -e "${GB}[ INFO ]${NC} ${YB}Setup Done${NC}"
@@ -201,35 +227,6 @@ net.ipv4.tcp_max_orphans = 32768
 net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
 
 
-#systemctl restart haproxy
-
-#cat > /etc/systemd/system/bot-admin.service << END
-#[Unit]
-#Description=bot admin
-#After=network.target
-
-#[Service]
-#ExecStart=/usr/local/etc/xray/bot-admin
-#Restart=always
-#RestartSec=5
-#User=root
-
-#[Install]
-#WantedBy=multi-user.target
-#END
-#cat > /etc/systemd/system/bot-agent.service << END
-#[Unit]
-#Description=bot agent
-#After=network.target
-#[Service]
-#ExecStart=/usr/local/etc/xray/bot-agent
-#Restart=always
-#RestartSec=5
-#User=root
-#[Install]
-#WantedBy=multi-user.target
-#END
-
 cd /usr/bin
 echo -e "${GB}[ INFO ]${NC} ${YB}Downloading Main Menu${NC}"
 wget -q -O /usr/bin/menu "https://raw.githubusercontent.com/masjeho2/v1/xray/menu/menu.sh"
@@ -256,7 +253,8 @@ sleep 2
 
 
 
-clearecho -e "${GB}[ INFO ]${NC} ${YB}Setting Permission${NC}"
+clear
+echo -e "${GB}[ INFO ]${NC} ${YB}Setting Permission${NC}"
 chmod +x /usr/local/etc/xray/bot-admin
 chmod +x /usr/local/etc/xray/bot-agent
 chmod +x /usr/bin/dns
@@ -273,32 +271,28 @@ echo "*/3 * * * * root truncate -s 0 /var/log/xray/access.log" >> /etc/crontab
 echo "0 0 */7 * * root curl -L -o /usr/local/share/xray/geoip.dat https://github.com/malikshi/v2ray-rules-dat/releases/latest/download/geoip.dat && curl -L -o /usr/local/share/xray/geosite.dat https://github.com/malikshi/v2ray-rules-dat/releases/latest/download/geosite.dat && systemctl restart xray" >> /etc/crontab
 systemctl daemon-reload
 systemctl restart cron
-#systemctl enable bot-admin
-#systemctl enable bot-agent
 systemctl enable haproxy
 systemctl enable xray
-#systemctl start bot-admin
-#systemctl start bot-agent
 systemctl start haproxy
 systemctl start xray
 systemctl restart haproxy
 systemctl restart xray
-#systemctl restart bot-admin
-#systemctl restart bot-agent
 clear
 
 
 echo -e "${GB}[ INFO ]${NC} ${YB}Setting Permission Done${NC}"
 sleep 2
 cd /usr/local/etc/xray
+log_info "Installing npm dependencies..."
 npm install
+log_info "Installing PM2 globally..."
 npm install -g pm2
 
-echo -e "${GB}[ INFO ]${NC} ${YB}Memulai API Server via PM2...${NC}"
+step "Starting API Server"
 cd /usr/local/etc/xray
 pm2 start api-server.js --name api 2>&1 | tail -5
 pm2 save 2>/dev/null
-echo -e "${GB}[ INFO ]${NC} ${YB}✓ API Server berjalan via PM2${NC}"
+log_ok "API Server berjalan di PM2 (name: api)"
 cd
 
 echo -e "${GB}[ INFO ]${NC} ${YB}Setting Profile${NC}"
@@ -318,16 +312,17 @@ neofetch
 echo "Please type 'menu' to continue."
 END
 
+step "API Server Key Info"
+echo -e "${GB}╔════════════════════════════════════════════════════════╗${NC}"
+echo -e "${GB}║${YB}                🔑  API SERVER KEY  🔑                ${GB}║${NC}"
+echo -e "${GB}╚════════════════════════════════════════════════════════╝${NC}"
 echo ""
-echo -e "${GB}============================================${NC}"
-echo -e "${YB}    🔑 API SERVER KEY INFO${NC}"
-echo -e "${GB}============================================${NC}"
-echo -e "${CB}Cek API_KEY di PM2 logs:${NC}"
-echo -e "  ${YB}pm2 logs api --lines 10${NC}"
-echo -e ""
-echo -e "${CB}Key akan tampil saat API server pertama kali start.${NC}"
-echo -e "${CB}Masukkan key ini ke panel bot → Server → Edit → API Key${NC}"
-echo -e "${GB}============================================${NC}" 
+echo -e "${WB}Lihat API_KEY anda dengan:${NC}"
+echo -e "  ${YB}pm2 logs api --lines 10 --nostream${NC}"
+echo -e "  ${YB}cat /usr/local/etc/xray/.server.key${NC}"
+echo ""
+echo -e "${WB}Salin key ini ke Panel Bot → Server → Edit → API Key${NC}"
+echo -e "${GB}────────────────────────────────────────────────────────${NC}"
 chmod 644 /root/.profile
 clear
 echo ""
