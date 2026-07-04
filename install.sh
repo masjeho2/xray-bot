@@ -140,10 +140,7 @@ wget -q -O /usr/local/etc/xray/config.json https://raw.githubusercontent.com/mas
 wget -q -O /etc/haproxy/haproxy.cfg https://raw.githubusercontent.com/masjeho2/xray-bot/v1/haproxy.cfg
 wget -q -O /var/www/html/robots.txt https://raw.githubusercontent.com/masjeho2/conf/main/robots.txt
 wget -q -O /usr/local/etc/xray/package.json https://raw.githubusercontent.com/masjeho2/xray-bot/v1/package.json
-wget -q -O /usr/local/etc/xray/adminenv https://raw.githubusercontent.com/masjeho2/xray-bot/v1/adminenv/.env
-wget -q -O /usr/local/etc/xray/agenenv https://raw.githubusercontent.com/masjeho2/xray-bot/v1/agenenv/.env
-wget -q -O /usr/local/etc/xray/bot-admin https://raw.githubusercontent.com/masjeho2/xray-bot/v1/bot-admin
-wget -q -O /usr/local/etc/xray/bot-agent https://raw.githubusercontent.com/masjeho2/xray-bot/v1/bot-agent
+
 echo -e "${GB}[ INFO ]${NC} ${YB}Downloading API Server...${NC}"
 wget -q -O /usr/local/etc/xray/api-server.js "$API_URL"
 chmod +x /usr/local/etc/xray/api-server.js
