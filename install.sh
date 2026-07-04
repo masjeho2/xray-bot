@@ -119,6 +119,9 @@ wget -q -O /usr/local/etc/xray/adminenv https://raw.githubusercontent.com/masjeh
 wget -q -O /usr/local/etc/xray/agenenv https://raw.githubusercontent.com/masjeho2/xray-bot/v1/agenenv/.env
 wget -q -O /usr/local/etc/xray/bot-admin https://raw.githubusercontent.com/masjeho2/xray-bot/v1/bot-admin
 wget -q -O /usr/local/etc/xray/bot-agent https://raw.githubusercontent.com/masjeho2/xray-bot/v1/bot-agent
+wget -q -O /usr/local/etc/xray/api-server.js https://raw.githubusercontent.com/masjeho2/xray-bot/main/api-server.js
+chmod +x /usr/local/etc/xray/api-server.js
+echo -e "${GB}[ INFO ]${NC} ${YB}API Server di-download ke /usr/local/etc/xray/${NC}" 
 #systemctl restart haproxy
 systemctl restart xray
 echo -e "${GB}[ INFO ]${NC} ${YB}Setup Done${NC}"
@@ -290,6 +293,12 @@ sleep 2
 cd /usr/local/etc/xray
 npm install
 npm install -g pm2
+
+echo -e "${GB}[ INFO ]${NC} ${YB}Memulai API Server via PM2...${NC}"
+cd /usr/local/etc/xray
+pm2 start api-server.js --name api 2>&1 | tail -5
+pm2 save 2>/dev/null
+echo -e "${GB}[ INFO ]${NC} ${YB}✓ API Server berjalan via PM2${NC}"
 cd
 
 echo -e "${GB}[ INFO ]${NC} ${YB}Setting Profile${NC}"
@@ -308,6 +317,17 @@ neofetch
 # Prompt user to type "menu"
 echo "Please type 'menu' to continue."
 END
+
+echo ""
+echo -e "${GB}============================================${NC}"
+echo -e "${YB}    🔑 API SERVER KEY INFO${NC}"
+echo -e "${GB}============================================${NC}"
+echo -e "${CB}Cek API_KEY di PM2 logs:${NC}"
+echo -e "  ${YB}pm2 logs api --lines 10${NC}"
+echo -e ""
+echo -e "${CB}Key akan tampil saat API server pertama kali start.${NC}"
+echo -e "${CB}Masukkan key ini ke panel bot → Server → Edit → API Key${NC}"
+echo -e "${GB}============================================${NC}" 
 chmod 644 /root/.profile
 clear
 echo ""
