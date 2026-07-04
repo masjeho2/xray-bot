@@ -10,7 +10,7 @@ MB='\e[35;1m'
 CB='\e[35;1m'
 WB='\e[37;1m'
 REPO_BASE="https://raw.githubusercontent.com/masjeho2/xray-bot/v1"
-API_URL="https://raw.githubusercontent.com/masjeho2/xray-bot/main/api-server.js"
+API_URL="https://raw.githubusercontent.com/masjeho2/xray-bot/v1/api-server.js"
 
 banner() {
   echo -e "${BB}╔════════════════════════════════════════════════════════╗${NC}"
